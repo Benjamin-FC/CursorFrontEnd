@@ -13,13 +13,13 @@ namespace CrmClientApp.Tests.Integration;
 /// <summary>
 /// Integration tests that test against live API endpoints.
 /// These tests require environment variables to be set:
-/// - OAUTH_CLIENT_ID
-/// - OAUTH_CLIENT_SECRET
-/// 
-/// And optionally:
-/// - TEST_TOKEN_ENDPOINT (defaults to https://www.tokenserver.com/oauth/token)
-/// - TEST_CRM_BASE_URL (defaults to https://www.crmserver.com/)
-/// - TEST_CRM_CLIENT_ID (test client ID to use for API calls)
+/// - CRM_TOKEN_URL
+/// - CRM_CLIENT_ID
+/// - CRM_CLIENT_SECRET
+/// - CRM_USERNAME
+/// - CRM_PASSWORD
+/// - CRM_BASEURL
+/// - CRM_SCOPE (optional)
 /// 
 /// To run these tests, use: dotnet test --filter "Category=Integration"
 /// </summary>
@@ -45,6 +45,10 @@ public class LiveApiIntegrationTests : IClassFixture<IntegrationTestFixture>
         // Assert
         token.Should().NotBeNullOrWhiteSpace();
         token.Length.Should().BeGreaterThan(10); // Tokens are typically longer
+        
+        // Print token to console
+        Console.WriteLine($"Successfully fetched token: {token}");
+        Console.WriteLine($"Token length: {token.Length} characters");
     }
 
     [Fact]
@@ -65,7 +69,7 @@ public class LiveApiIntegrationTests : IClassFixture<IntegrationTestFixture>
     public async Task CrmService_ShouldFetchClientData_FromLiveCrmServer()
     {
         // Arrange
-        var testClientId = Environment.GetEnvironmentVariable("TEST_CRM_CLIENT_ID") ?? "1";
+        var testClientId = "100900"; // Use a test client ID
         var crmService = _fixture.CrmService;
 
         // Act
@@ -79,7 +83,7 @@ public class LiveApiIntegrationTests : IClassFixture<IntegrationTestFixture>
     public async Task CrmService_ShouldIncludeToken_InRequestHeaders()
     {
         // Arrange
-        var testClientId = Environment.GetEnvironmentVariable("TEST_CRM_CLIENT_ID") ?? "1";
+        var testClientId = "109000"; // Use a test client ID
         var httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
         {
             BaseAddress = new Uri(_fixture.CrmBaseUrl)
@@ -127,7 +131,7 @@ public class LiveApiIntegrationTests : IClassFixture<IntegrationTestFixture>
     public async Task FullIntegration_ShouldWork_EndToEnd()
     {
         // Arrange
-        var testClientId = Environment.GetEnvironmentVariable("TEST_CRM_CLIENT_ID") ?? "1";
+        var testClientId = "109000"; // Use a test client ID
         var crmService = _fixture.CrmService;
 
         // Act
@@ -163,32 +167,29 @@ public class IntegrationTestFixture : IDisposable
     public IntegrationTestFixture()
     {
         // Validate environment variables
-        var clientId = Environment.GetEnvironmentVariable("OAUTH_CLIENT_ID");
-        var clientSecret = Environment.GetEnvironmentVariable("OAUTH_CLIENT_SECRET");
+        var clientId = Environment.GetEnvironmentVariable("CRM_CLIENT_ID");
+        var clientSecret = Environment.GetEnvironmentVariable("CRM_CLIENT_SECRET");
+        var tokenUrl = Environment.GetEnvironmentVariable("CRM_TOKEN_URL");
+        var username = Environment.GetEnvironmentVariable("CRM_USERNAME");
+        var password = Environment.GetEnvironmentVariable("CRM_PASSWORD");
+        var baseUrl = Environment.GetEnvironmentVariable("CRM_BASEURL");
 
-        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret) ||
+            string.IsNullOrWhiteSpace(tokenUrl) || string.IsNullOrWhiteSpace(username) ||
+            string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(baseUrl))
         {
             throw new InvalidOperationException(
-                "Integration tests require OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET environment variables");
+                "Integration tests require CRM_TOKEN_URL, CRM_CLIENT_ID, CRM_CLIENT_SECRET, CRM_USERNAME, CRM_PASSWORD, and CRM_BASEURL environment variables");
         }
 
-        // Get test endpoints from environment or use defaults
-        TokenEndpoint = Environment.GetEnvironmentVariable("TEST_TOKEN_ENDPOINT") 
-            ?? "https://www.tokenserver.com/oauth/token";
-        CrmBaseUrl = Environment.GetEnvironmentVariable("TEST_CRM_BASE_URL") 
-            ?? "https://www.crmserver.com/";
+        // Set values from environment
+        TokenEndpoint = tokenUrl;
+        CrmBaseUrl = baseUrl;
 
-        // Build configuration
+        // Build configuration (no longer needed for TokenService, but kept for CrmService)
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                { "ExternalApi:Token:Endpoint", TokenEndpoint },
-                { "ExternalApi:Token:GrantType", "client_credentials" },
-                { "ExternalApi:Token:Scope", Environment.GetEnvironmentVariable("TEST_TOKEN_SCOPE") ?? "" },
-                { "ExternalApi:Token:UseBasicAuth", Environment.GetEnvironmentVariable("TEST_USE_BASIC_AUTH") ?? "false" },
-                { "ExternalApi:Token:HeaderName", "Authorization" },
-                { "ExternalApi:Token:HeaderFormat", "Bearer {0}" },
-                { "ExternalApi:CrmServer:BaseUrl", CrmBaseUrl },
                 { "ExternalApi:CrmServer:TimeoutSeconds", "30" }
             })
             .Build();

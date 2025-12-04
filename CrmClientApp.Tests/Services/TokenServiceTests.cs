@@ -31,13 +31,7 @@ public class TokenServiceTests : IDisposable
         _mockLogger = new Mock<ILogger<TokenService>>();
         _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
         
-        var inMemorySettings = new Dictionary<string, string?>
-        {
-            { "ExternalApi:Token:Endpoint", "https://www.tokenserver.com/oauth/token" },
-            { "ExternalApi:Token:GrantType", "client_credentials" },
-            { "ExternalApi:Token:Scope", "read write" },
-            { "ExternalApi:Token:UseBasicAuth", "false" }
-        };
+        var inMemorySettings = new Dictionary<string, string?>();
         
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
@@ -52,8 +46,9 @@ public class TokenServiceTests : IDisposable
     public void Constructor_ShouldThrow_WhenClientIdIsMissing()
     {
         // Arrange - Clear any previously set environment variables
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", null);
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "secret");
         
         try
         {
@@ -61,13 +56,14 @@ public class TokenServiceTests : IDisposable
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
             
-            exception.Message.Should().Contain("OAUTH_CLIENT_ID");
+            exception.Message.Should().Contain("CRM_CLIENT_ID");
         }
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
-            Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+            Environment.SetEnvironmentVariable("CRM_TOKEN_URL", null);
+            Environment.SetEnvironmentVariable("CRM_CLIENT_ID", null);
+            Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", null);
         }
     }
 
@@ -75,8 +71,9 @@ public class TokenServiceTests : IDisposable
     public void Constructor_ShouldThrow_WhenClientSecretIsMissing()
     {
         // Arrange - Clear any previously set environment variables
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", null);
 
         try
         {
@@ -84,13 +81,14 @@ public class TokenServiceTests : IDisposable
             var exception = Assert.Throws<InvalidOperationException>(() =>
                 new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
             
-            exception.Message.Should().Contain("OAUTH_CLIENT_SECRET");
+            exception.Message.Should().Contain("CRM_CLIENT_SECRET");
         }
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
-            Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+            Environment.SetEnvironmentVariable("CRM_TOKEN_URL", null);
+            Environment.SetEnvironmentVariable("CRM_CLIENT_ID", null);
+            Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", null);
         }
     }
 
@@ -98,8 +96,9 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldReturnToken_WhenRequestIsSuccessful()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var responseContent = @"{""access_token"":""test-access-token-12345"",""token_type"":""Bearer"",""expires_in"":3600,""scope"":""read write""}";
         
@@ -128,8 +127,9 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldUseCachedToken_WhenTokenIsStillValid()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var responseContent = @"{""access_token"":""cached-token"",""token_type"":""Bearer"",""expires_in"":3600}";
         
@@ -166,8 +166,10 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldIncludeScope_WhenScopeIsConfigured()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_SCOPE", "read write");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var responseContent = @"{""access_token"":""test-token"",""expires_in"":3600}";
         
@@ -203,18 +205,10 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldUseBasicAuth_WhenConfigured()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
-
-        var inMemorySettings = new Dictionary<string, string?>
-        {
-            { "ExternalApi:Token:Endpoint", "https://www.tokenserver.com/oauth/token" },
-            { "ExternalApi:Token:UseBasicAuth", "true" }
-        };
-        
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(inMemorySettings)
-            .Build();
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("USE_BASIC_AUTH", "true");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var responseContent = @"{""access_token"":""test-token-basic"",""expires_in"":3600}";
         
@@ -235,7 +229,7 @@ public class TokenServiceTests : IDisposable
                 };
             });
 
-        var tokenService = new TokenService(config, _mockLogger.Object, _mockHttpClientFactory.Object);
+        var tokenService = new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object);
 
         // Act
         await tokenService.GetTokenAsync();
@@ -250,8 +244,9 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldThrow_WhenTokenServerReturnsError()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         _mockHttpMessageHandler
             .Protected()
@@ -275,8 +270,9 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldThrow_WhenTokenResponseIsInvalid()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var invalidResponse = new { invalid_field = "value" };
         var responseContent = JsonSerializer.Serialize(invalidResponse);
@@ -304,8 +300,9 @@ public class TokenServiceTests : IDisposable
     public async Task GetTokenAsync_ShouldRefreshToken_WhenTokenIsExpired()
     {
         // Arrange
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
 
         var tokenResponse1Content = @"{""access_token"":""first-token"",""expires_in"":1}";
         var tokenResponse2Content = @"{""access_token"":""refreshed-token"",""expires_in"":3600}";
@@ -351,7 +348,11 @@ public class TokenServiceTests : IDisposable
     public void Dispose()
     {
         // Clean up environment variables after each test
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
-        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", null);
+        Environment.SetEnvironmentVariable("GRANT_TYPE", null);
+        Environment.SetEnvironmentVariable("CRM_SCOPE", null);
+        Environment.SetEnvironmentVariable("USE_BASIC_AUTH", null);
+        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", null);
+        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", null);
     }
 }

@@ -53,7 +53,7 @@ public class CrmService : ICrmService
             var tokenHeaderFormat = _configuration["ExternalApi:Token:HeaderFormat"] ?? "Bearer {0}";
             
             // Create request message
-            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/GetClientData?id={clientId}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/ClientData/{clientId}");
             
             // Add token to header
             var tokenHeaderValue = string.Format(tokenHeaderFormat, token);

@@ -10,11 +10,16 @@ namespace CrmClientApp.Services;
 /// </summary>
 public class TokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<TokenService> _logger;
     private readonly HttpClient _httpClient;
+    private readonly string _tokenEndpoint;
+    private readonly string _grantType;
+    private readonly string _scope;
+    private readonly bool _useBasicAuth;
     private readonly string _clientId;
     private readonly string _clientSecret;
+    private readonly string _username;
+    private readonly string _password;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     
     private CachedToken? _cachedToken;
@@ -22,7 +27,7 @@ public class TokenService : ITokenService
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenService"/> class.
     /// </summary>
-    /// <param name="configuration">The configuration instance for accessing token server settings.</param>
+    /// <param name="configuration">Not used - kept for interface compatibility.</param>
     /// <param name="logger">The logger instance for logging operations.</param>
     /// <param name="httpClientFactory">The HTTP client factory for creating HTTP clients.</param>
     /// <exception cref="InvalidOperationException">Thrown when required OAuth environment variables are not set.</exception>
@@ -31,15 +36,23 @@ public class TokenService : ITokenService
         ILogger<TokenService> logger,
         IHttpClientFactory httpClientFactory)
     {
-        _configuration = configuration;
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
         
-        // Read client ID and secret from environment variables
-        _clientId = Environment.GetEnvironmentVariable("OAUTH_CLIENT_ID") 
-            ?? throw new InvalidOperationException("OAUTH_CLIENT_ID environment variable is required");
-        _clientSecret = Environment.GetEnvironmentVariable("OAUTH_CLIENT_SECRET") 
-            ?? throw new InvalidOperationException("OAUTH_CLIENT_SECRET environment variable is required");
+        // Read all configuration from environment variables
+        _tokenEndpoint = Environment.GetEnvironmentVariable("CRM_TOKEN_URL") 
+            ?? throw new InvalidOperationException("CRM_TOKEN_URL environment variable is required");
+        _grantType = "password";
+        _scope = Environment.GetEnvironmentVariable("CRM_SCOPE") ?? "";
+        _useBasicAuth = bool.TryParse(Environment.GetEnvironmentVariable("USE_BASIC_AUTH"), out var useBasicAuth) && useBasicAuth;
+        _clientId = Environment.GetEnvironmentVariable("CRM_CLIENT_ID") 
+            ?? throw new InvalidOperationException("CRM_CLIENT_ID environment variable is required");
+        _clientSecret = Environment.GetEnvironmentVariable("CRM_CLIENT_SECRET") 
+            ?? throw new InvalidOperationException("CRM_CLIENT_SECRET environment variable is required");
+        _username = Environment.GetEnvironmentVariable("CRM_USERNAME") 
+            ?? throw new InvalidOperationException("CRM_USERNAME environment variable is required");
+        _password = Environment.GetEnvironmentVariable("CRM_PASSWORD") 
+            ?? throw new InvalidOperationException("CRM_PASSWORD environment variable is required");
     }
 
     /// <summary>
@@ -90,34 +103,26 @@ public class TokenService : ITokenService
     {
         try
         {
-            var tokenEndpoint = _configuration["ExternalApi:Token:Endpoint"] 
-                ?? throw new InvalidOperationException("ExternalApi:Token:Endpoint configuration is required");
-            var scope = _configuration["ExternalApi:Token:Scope"] ?? "";
-            var grantType = _configuration["ExternalApi:Token:GrantType"] ?? "client_credentials";
-
             _logger.LogInformation("Fetching OAuth token from token server");
 
             // Prepare OAuth token request
             var requestBody = new List<KeyValuePair<string, string>>
             {
-                new("grant_type", grantType),
                 new("client_id", _clientId),
-                new("client_secret", _clientSecret)
+                new("client_secret", _clientSecret),
+                new("scope", _scope),
+                new("grant_type", _grantType),
+                new("username", _username),
+                new("password", _password)
             };
 
-            if (!string.IsNullOrWhiteSpace(scope))
-            {
-                requestBody.Add(new KeyValuePair<string, string>("scope", scope));
-            }
-
-            var request = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+            var request = new HttpRequestMessage(HttpMethod.Post, _tokenEndpoint)
             {
                 Content = new FormUrlEncodedContent(requestBody)
             };
 
             // Add basic auth header if configured
-            var useBasicAuth = _configuration.GetValue<bool>("ExternalApi:Token:UseBasicAuth", false);
-            if (useBasicAuth)
+            if (_useBasicAuth)
             {
                 var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
