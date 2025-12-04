@@ -167,67 +167,53 @@ graph LR
 ### Client Data Retrieval Flow
 
 ```mermaid
-sequenceDiagram
-    participant User as 👤 User
-    participant React as ⚛️ React Frontend<br/>(Port 5173)
-    participant Controller as 🎮 CrmController<br/>(API Endpoint)
-    participant CrmService as 📊 CrmService
-    participant TokenService as 🔐 TokenService
-    participant TokenServer as 🔑 Token Server
-    participant CrmServer as 📈 CRM Server
+flowchart TD
+    Start([👤 User enters client ID]) --> React[⚛️ React Frontend<br/>Sends GET request]
+    React --> Controller{🎮 CrmController<br/>Validate client ID}
     
-    User->>React: Enter client ID
-    React->>Controller: GET /api/Crm/GetClientData?id={clientId}
-    activate Controller
+    Controller -->|Invalid| Error1[Return 400 Bad Request]
+    Error1 --> DisplayError1[Display error message]
     
-    Controller->>Controller: Validate client ID
-    alt Invalid client ID
-        Controller-->>React: 400 Bad Request ❌
-        React-->>User: Display error message
-    else Valid client ID
-        Controller->>CrmService: GetClientDataAsync(clientId)
-        activate CrmService
-        
-        CrmService->>TokenService: GetTokenAsync()
-        activate TokenService
-        
-        TokenService->>TokenService: Check token cache
-        alt Token cached and valid
-            TokenService-->>CrmService: Return cached token ✅
-        else Token expired or missing
-            TokenService->>TokenService: Acquire semaphore lock 🔒
-            TokenService->>TokenServer: POST /oauth/token<br/>(client credentials)
-            activate TokenServer
-            TokenServer-->>TokenService: Access token + expires_in
-            deactivate TokenServer
-            TokenService->>TokenService: Cache token<br/>(expires_at = now + 3540s)
-            TokenService->>TokenService: Release semaphore lock 🔓
-            TokenService-->>CrmService: Return token ✅
-        end
-        deactivate TokenService
-        
-        CrmService->>CrmService: Construct HTTP request<br/>with Bearer token header
-        CrmService->>CrmServer: GET /api/GetClientData?id={clientId}<br/>Authorization: Bearer {token}
-        activate CrmServer
-        
-        alt CRM Server Success
-            CrmServer-->>CrmService: 200 OK + Client Data
-            deactivate CrmServer
-            CrmService-->>Controller: Client data string
-            deactivate CrmService
-            Controller-->>React: 200 OK<br/>{ "data": "..." }
-            deactivate Controller
-            React-->>User: Display client data ✅
-        else CRM Server Error
-            CrmServer-->>CrmService: Error response
-            deactivate CrmServer
-            CrmService-->>Controller: HttpRequestException
-            deactivate CrmService
-            Controller-->>React: 503 Service Unavailable ❌
-            deactivate Controller
-            React-->>User: Display error message
-        end
-    end
+    Controller -->|Valid| CrmService[📊 CrmService<br/>GetClientDataAsync]
+    CrmService --> TokenService[🔐 TokenService<br/>GetTokenAsync]
+    
+    TokenService --> TokenCheck{Check token cache}
+    TokenCheck -->|Valid & Cached| UseToken[Use cached token ✅]
+    TokenCheck -->|Expired/Missing| GetToken[Acquire lock 🔒<br/>POST /oauth/token]
+    
+    GetToken --> TokenServer[🔑 Token Server<br/>Returns access token]
+    TokenServer --> CacheToken[Cache token<br/>expires_at = now + 3540s]
+    CacheToken --> ReleaseLock[Release lock 🔓]
+    ReleaseLock --> UseToken
+    
+    UseToken --> BuildRequest[Construct HTTP request<br/>with Bearer token header]
+    BuildRequest --> CrmServer[📈 CRM Server<br/>GET /api/GetClientData]
+    
+    CrmServer --> ServerCheck{Server Response}
+    ServerCheck -->|200 OK| Success[Return client data]
+    ServerCheck -->|Error| ServerError[HttpRequestException]
+    
+    Success --> ReturnSuccess[Controller returns<br/>200 OK + data]
+    ReturnSuccess --> DisplaySuccess[Display client data ✅]
+    
+    ServerError --> ReturnError[Controller returns<br/>503 Service Unavailable]
+    ReturnError --> DisplayError2[Display error message]
+    
+    classDef user fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef frontend fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef backend fill:#512bd4,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#ff6b6b,stroke:#fff,stroke-width:2px,color:#fff
+    classDef success fill:#4caf50,stroke:#fff,stroke-width:2px,color:#fff
+    classDef error fill:#f44336,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class Start,DisplaySuccess,DisplayError1,DisplayError2 user
+    class React frontend
+    class Controller,CrmService,ReturnSuccess,ReturnError backend
+    class TokenService,UseToken,BuildRequest service
+    class TokenServer,CrmServer external
+    class Success,ReturnSuccess,DisplaySuccess success
+    class Error1,ServerError,ReturnError,DisplayError1,DisplayError2 error
 ```
 
 ## Authentication Flow

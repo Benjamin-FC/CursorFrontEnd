@@ -10,16 +10,33 @@ This is the React frontend for the CRM Client Data Fetcher application. It provi
 
 ## Project Structure
 
-```
-ClientApp/
-├── src/
-│   ├── App.jsx          # Main React component with form
-│   ├── App.css          # Component styles
-│   ├── main.jsx         # Application entry point
-│   └── index.css        # Global styles
-├── public/              # Static assets
-├── vite.config.js       # Vite configuration with API proxy
-└── package.json         # Dependencies and scripts
+```mermaid
+graph TD
+    Root[ClientApp/<br/>⚛️ React Frontend]
+    
+    Root --> Src[src/<br/>📝 Source Files]
+    Root --> Public[public/<br/>🌐 Static Assets]
+    Root --> ViteConfig[vite.config.js<br/>⚡ Vite Configuration]
+    Root --> PackageJson[package.json<br/>📦 Dependencies]
+    Root --> IndexHTML[index.html<br/>📄 HTML Entry]
+    
+    Src --> AppJSX[App.jsx<br/>⚛️ Main React Component]
+    Src --> AppCSS[App.css<br/>🎨 Component Styles]
+    Src --> MainJSX[main.jsx<br/>🚀 Application Entry]
+    Src --> IndexCSS[index.css<br/>🎨 Global Styles]
+    Src --> Assets[assets/<br/>🖼️ Images & Icons]
+    
+    Public --> ViteSVG[vite.svg<br/>🖼️ Logo]
+    
+    classDef root fill:#61dafb,stroke:#20232a,stroke-width:3px,color:#000
+    classDef folder fill:#4ec9b0,stroke:#fff,stroke-width:2px,color:#000
+    classDef config fill:#ffa500,stroke:#fff,stroke-width:2px,color:#000
+    classDef file fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class Root root
+    class Src,Public,Assets folder
+    class ViteConfig,PackageJson,IndexHTML config
+    class AppJSX,AppCSS,MainJSX,IndexCSS,ViteSVG file
 ```
 
 ## Development
