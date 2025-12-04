@@ -3,6 +3,10 @@ using System.Text.Json;
 
 namespace CrmClientApp.Services;
 
+/// <summary>
+/// Service implementation for retrieving and managing OAuth 2.0 access tokens.
+/// Implements token caching with automatic refresh before expiration and thread-safe token retrieval.
+/// </summary>
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
@@ -14,6 +18,13 @@ public class TokenService : ITokenService
     
     private CachedToken? _cachedToken;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TokenService"/> class.
+    /// </summary>
+    /// <param name="configuration">The configuration instance for accessing token server settings.</param>
+    /// <param name="logger">The logger instance for logging operations.</param>
+    /// <param name="httpClientFactory">The HTTP client factory for creating HTTP clients.</param>
+    /// <exception cref="InvalidOperationException">Thrown when required OAuth environment variables are not set.</exception>
     public TokenService(
         IConfiguration configuration, 
         ILogger<TokenService> logger,
@@ -30,6 +41,14 @@ public class TokenService : ITokenService
             ?? throw new InvalidOperationException("OAUTH_CLIENT_SECRET environment variable is required");
     }
 
+    /// <summary>
+    /// Retrieves a valid OAuth access token. Uses cached token if available and valid,
+    /// otherwise fetches a new token from the token server. Thread-safe implementation
+    /// ensures only one token request is made at a time.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the OAuth access token as a string.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to the token server fails.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the token response is invalid or required configuration is missing.</exception>
     public async Task<string> GetTokenAsync()
     {
         // Check if we have a valid cached token
@@ -59,6 +78,13 @@ public class TokenService : ITokenService
         }
     }
 
+    /// <summary>
+    /// Fetches a new OAuth token from the token server using client credentials flow.
+    /// Supports both form-encoded and Basic Authentication methods.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the OAuth access token as a string.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to the token server fails.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the token response is invalid or required configuration is missing.</exception>
     private async Task<string> FetchTokenFromServerAsync()
     {
         try
@@ -133,17 +159,45 @@ public class TokenService : ITokenService
         }
     }
 
+    /// <summary>
+    /// Represents a cached OAuth token with its expiration time.
+    /// </summary>
     private class CachedToken
     {
+        /// <summary>
+        /// Gets or sets the OAuth access token.
+        /// </summary>
         public string Token { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Gets or sets the UTC date and time when the token expires.
+        /// </summary>
         public DateTime ExpiresAt { get; set; }
     }
 
+    /// <summary>
+    /// Represents the response from the OAuth token server.
+    /// </summary>
     private class TokenResponse
     {
+        /// <summary>
+        /// Gets or sets the access token.
+        /// </summary>
         public string? AccessToken { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the token type (typically "Bearer").
+        /// </summary>
         public string? TokenType { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the number of seconds until the token expires.
+        /// </summary>
         public int? ExpiresIn { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the OAuth scope associated with the token.
+        /// </summary>
         public string? Scope { get; set; }
     }
 }

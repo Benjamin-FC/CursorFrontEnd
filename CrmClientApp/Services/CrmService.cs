@@ -2,6 +2,10 @@ using System.Text;
 
 namespace CrmClientApp.Services;
 
+/// <summary>
+/// Service implementation for retrieving client data from an external CRM server.
+/// Handles OAuth token retrieval and HTTP requests to the CRM API.
+/// </summary>
 public class CrmService : ICrmService
 {
     private readonly HttpClient _httpClient;
@@ -9,6 +13,13 @@ public class CrmService : ICrmService
     private readonly ITokenService _tokenService;
     private readonly IConfiguration _configuration;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CrmService"/> class.
+    /// </summary>
+    /// <param name="httpClient">The HTTP client configured with the CRM server base URL.</param>
+    /// <param name="logger">The logger instance for logging operations.</param>
+    /// <param name="tokenService">The token service for retrieving OAuth tokens.</param>
+    /// <param name="configuration">The configuration instance for accessing app settings.</param>
     public CrmService(
         HttpClient httpClient, 
         ILogger<CrmService> logger,
@@ -21,6 +32,13 @@ public class CrmService : ICrmService
         _configuration = configuration;
     }
 
+    /// <summary>
+    /// Retrieves client data from the external CRM server for the specified client ID.
+    /// Automatically retrieves and includes an OAuth token in the request headers.
+    /// </summary>
+    /// <param name="clientId">The unique identifier of the client to retrieve data for.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the client data as a string.</returns>
+    /// <exception cref="HttpRequestException">Thrown when the HTTP request to the CRM server fails or returns a non-success status code.</exception>
     public async Task<string> GetClientDataAsync(string clientId)
     {
         try
