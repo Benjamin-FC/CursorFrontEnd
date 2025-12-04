@@ -145,8 +145,7 @@ public class CrmServiceTests
 
         // Assert
         capturedRequest.Should().NotBeNull();
-        capturedRequest!.RequestUri!.ToString().Should().Contain("/api/GetClientData");
-        capturedRequest.RequestUri.ToString().Should().Contain("id=12345");
+        capturedRequest!.RequestUri!.ToString().Should().Contain("/api/v1/ClientData/12345");
     }
 
     [Fact]
