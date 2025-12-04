@@ -120,10 +120,11 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      act(() => {
-        const loginResult = result.current.login('testuser', 'password123')
-        expect(loginResult.success).toBe(true)
+      let loginResult
+      await act(async () => {
+        loginResult = await result.current.login('testuser', 'password123')
       })
+      expect(loginResult.success).toBe(true)
 
       await waitFor(() => {
         expect(result.current.isAuthenticated).toBe(true)
@@ -133,57 +134,61 @@ describe('AuthContext', () => {
       })
     })
 
-    it('should fail login with empty username', () => {
+    it('should fail login with empty username', async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
 
-      act(() => {
-        const loginResult = result.current.login('', 'password123')
-        expect(loginResult.success).toBe(false)
-        expect(loginResult.error).toBe('Please enter both username and password')
+      let loginResult
+      await act(async () => {
+        loginResult = await result.current.login('', 'password123')
       })
+      expect(loginResult.success).toBe(false)
+      expect(loginResult.error).toBe('Please enter both username and password')
 
       expect(result.current.isAuthenticated).toBe(false)
       expect(localStorage.getItem('isAuthenticated')).toBeNull()
     })
 
-    it('should fail login with empty password', () => {
+    it('should fail login with empty password', async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
 
-      act(() => {
-        const loginResult = result.current.login('testuser', '')
-        expect(loginResult.success).toBe(false)
-        expect(loginResult.error).toBe('Please enter both username and password')
+      let loginResult
+      await act(async () => {
+        loginResult = await result.current.login('testuser', '')
       })
+      expect(loginResult.success).toBe(false)
+      expect(loginResult.error).toBe('Please enter both username and password')
 
       expect(result.current.isAuthenticated).toBe(false)
     })
 
-    it('should fail login with null username', () => {
+    it('should fail login with null username', async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
 
-      act(() => {
-        const loginResult = result.current.login(null, 'password123')
-        expect(loginResult.success).toBe(false)
+      let loginResult
+      await act(async () => {
+        loginResult = await result.current.login(null, 'password123')
       })
+      expect(loginResult.success).toBe(false)
 
       expect(result.current.isAuthenticated).toBe(false)
     })
 
-    it('should fail login with null password', () => {
+    it('should fail login with null password', async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       })
 
-      act(() => {
-        const loginResult = result.current.login('testuser', null)
-        expect(loginResult.success).toBe(false)
+      let loginResult
+      await act(async () => {
+        loginResult = await result.current.login('testuser', null)
       })
+      expect(loginResult.success).toBe(false)
 
       expect(result.current.isAuthenticated).toBe(false)
     })
@@ -243,8 +248,8 @@ describe('AuthContext', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      act(() => {
-        result.current.login('testuser', 'password123')
+      await act(async () => {
+        await result.current.login('testuser', 'password123')
       })
 
       await waitFor(() => {

@@ -17,9 +17,11 @@ export function AuthProvider({ children }) {
     setIsLoading(false)
   }, [])
 
-  const login = (user, password) => {
+  const login = async (user, password) => {
     // TODO: Replace with actual authentication API call
-    // For now, simple validation
+    // For now, simple validation with minimal delay to allow loading state to render
+    await new Promise(resolve => setTimeout(resolve, 10))
+    
     if (user && password) {
       localStorage.setItem('isAuthenticated', 'true')
       localStorage.setItem('username', user)

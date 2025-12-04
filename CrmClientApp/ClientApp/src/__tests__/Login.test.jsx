@@ -188,12 +188,16 @@ describe('Login Component', () => {
 
       await user.type(usernameInput, 'testuser')
       await user.type(passwordInput, 'password123')
+      
+      // Click button and wait for loading state to appear
       await user.click(submitButton)
-
-      // Button should show loading state
-      expect(screen.getByText('Signing in...')).toBeInTheDocument()
-      expect(usernameInput).toBeDisabled()
-      expect(passwordInput).toBeDisabled()
+      
+      // Wait for loading state to be rendered
+      await waitFor(() => {
+        expect(screen.getByText('Signing in...')).toBeInTheDocument()
+        expect(usernameInput).toBeDisabled()
+        expect(passwordInput).toBeDisabled()
+      })
     })
 
     it('should handle form submission via Enter key', async () => {

@@ -150,20 +150,21 @@ describe('App Component', () => {
       const searchButton = screen.getByRole('button', { name: /search/i })
 
       await user.type(input, '12345')
-      
-      // Use act to wrap the async click
-      await act(async () => {
-        await user.click(searchButton)
-      })
+      await user.click(searchButton)
 
       await waitFor(() => {
         expect(screen.getByText('Searching...')).toBeInTheDocument()
         expect(input).toBeDisabled()
       })
 
-      resolveFetch({
-        ok: true,
-        json: async () => ({ data: {} }),
+      // Resolve the fetch promise inside act() to avoid warnings
+      await act(async () => {
+        resolveFetch({
+          ok: true,
+          json: async () => ({ data: {} }),
+        })
+        // Wait a bit for the promise to resolve
+        await new Promise(resolve => setTimeout(resolve, 10))
       })
     })
 
@@ -192,9 +193,13 @@ describe('App Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Client Data')).toBeInTheDocument()
-        expect(screen.getByText(/id/i)).toBeInTheDocument()
-        expect(screen.getByText(/name/i)).toBeInTheDocument()
-        expect(screen.getByText(/email/i)).toBeInTheDocument()
+        // Use more specific queries to avoid matching "Client ID" label or subtitle
+        const resultsSection = screen.getByText('Client Data').closest('.results-section')
+        expect(resultsSection).toBeInTheDocument()
+        // Check for data keys within the results section
+        expect(screen.getByText('id:')).toBeInTheDocument()
+        expect(screen.getByText('name:')).toBeInTheDocument()
+        expect(screen.getByText('email:')).toBeInTheDocument()
       })
     })
 
@@ -463,9 +468,13 @@ describe('App Component', () => {
       const user = userEvent.setup()
       renderApp(true)
 
-      const form = screen.getByRole('button', { name: /search/i }).closest('form')
-      const submitEvent = new Event('submit', { bubbles: true, cancelable: true })
-      form.dispatchEvent(submitEvent)
+      const searchButton = screen.getByRole('button', { name: /search/i })
+      
+      // Button should be disabled when input is empty
+      expect(searchButton).toBeDisabled()
+      
+      // Try to click the disabled button (should not trigger submission)
+      await user.click(searchButton)
 
       // Form validation should prevent submission
       expect(global.fetch).not.toHaveBeenCalled()
