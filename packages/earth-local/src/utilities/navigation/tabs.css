@@ -1,0 +1,52 @@
+@utility tab {
+  cursor: pointer;
+  box-sizing: border-box;
+  font-size: var(--text-body);
+  line-height: var(--tw-leading, var(--text-body--line-height));
+  color: var(--color-text-title);
+  padding-inline: var(--spacing-xxs);
+  padding-block: var(--spacing-sm);
+  /**
+    transition
+    **/
+  transition-property: border-color;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function) /* cubic-bezier(0.4, 0, 0.2, 1) */
+  );
+  transition-duration: var(
+    --tw-duration,
+    var(--default-transition-duration) /* 150ms */
+  );
+
+  @variant hover {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 2px;
+    border-color: var(--color-border-input);
+  }
+
+  @variant aria-page {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 2px;
+    border-color: var(--color-border-accent);
+  }
+
+  @variant aria-selected {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 2px;
+    border-color: var(--color-border-accent);
+  }
+  @variant aria-disabled {
+    cursor: not-allowed;
+    color: var(--color-text-disabled);
+    border: none;
+  }
+
+  @variant active {
+    border: none;
+  }
+
+  @variant focus-visible {
+    outline-color: var(--color-border-focused);
+  }
+}

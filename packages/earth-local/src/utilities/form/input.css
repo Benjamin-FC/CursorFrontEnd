@@ -1,0 +1,65 @@
+@utility input {
+  --input-height: 2.875rem;
+  --input-padding-block: var(--spacing-sm);
+
+  flex: 1 1 auto;
+  height: var(--input-height);
+  padding-block: var(--input-padding-block);
+  border: none;
+  outline: none;
+
+  /* Add passable default for the date picker for now */
+  &[type='date']::-webkit-calendar-picker-indicator {
+    /* Data URI for lucide icon https://lucide.dev/icons/calendar 
+		overrides the default calendar icon in date inputs in most browsers that matter
+		*/
+    mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNhbGVuZGFyLWljb24gbHVjaWRlLWNhbGVuZGFyIj48cGF0aCBkPSJNOCAydjQiLz48cGF0aCBkPSJNMTYgMnY0Ii8+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiB4PSIzIiB5PSI0IiByeD0iMiIvPjxwYXRoIGQ9Ik0zIDEwaDE4Ii8+PC9zdmc+');
+    background-repeat: no-repeat;
+    background-image: none;
+    background-color: currentColor;
+    mask-type: match-source;
+    cursor: pointer;
+  }
+}
+
+@utility input-wrapper {
+  --invalid-input-color: var(--color-border-danger);
+  --input-border: 1px solid var(--color-border-input);
+  --input-border-hover: 1px solid var(--color-border-focused);
+  --input-border-focus: 2px solid var(--color-border-focused);
+  --input-padding-inline: var(--spacing-sm);
+  --input-adornment-gap: 0.375rem;
+
+  inline-size: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--input-adornment-gap);
+  padding-inline: var(--input-padding-inline);
+  border: var(--input-border);
+  border-radius: var(--radius-sm);
+
+  @variant has-autofill {
+    background-color: light-dark(
+      rgb(232, 240, 254),
+      rgba(70, 90, 126, 0.4)
+    ) !important; /* Override browser autofill bg */
+  }
+  @variant aria-disabled {
+    opacity: 0.5;
+  }
+
+  @variant aria-invalid {
+    border-color: var(--invalid-input-color);
+  }
+
+  @variant hover {
+    &:not(:disabled):not(:focus-within) {
+      border: var(--input-border-hover);
+    }
+  }
+
+  @variant focus-within {
+    outline: var(--input-border-focus);
+    border-color: transparent;
+  }
+}

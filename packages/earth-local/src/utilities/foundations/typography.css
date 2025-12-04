@@ -1,0 +1,88 @@
+@import '@fontsource-variable/inter';
+
+@utility heading-1 {
+  font-size: var(--text-heading-1);
+  line-height: var(--text-heading-1--line-height);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-heading-1-md);
+    line-height: var(--text-heading-1-md--line-height);
+  }
+}
+
+@utility heading-2 {
+  font-size: var(--text-heading-2);
+  line-height: var(--text-heading-2--line-height);
+  font-weight: var(--font-weight-light);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-heading-2-md);
+    line-height: var(--text-heading-2-md--line-height);
+  }
+}
+
+@utility heading-3 {
+  font-size: var(--text-heading-3);
+  line-height: var(--text-heading-3--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-heading-3-md);
+    line-height: var(--text-heading-3-md--line-height);
+  }
+}
+
+@utility heading-4 {
+  font-size: var(--text-heading-4);
+  line-height: var(--text-heading-4--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-heading-4-md);
+    line-height: var(--text-heading-4-md--line-height);
+  }
+}
+
+@utility headline-1 {
+  font-size: var(--text-headline-1);
+  line-height: var(--text-headline-1--line-height);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-headline-1-md);
+    line-height: var(--text-headline-1-md--line-height);
+  }
+}
+
+@utility headline-2 {
+  font-size: var(--text-headline-2);
+  line-height: var(--text-headline-2--line-height);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-sans);
+  @variant md {
+    font-size: var(--text-headline-2-md);
+    line-height: var(--text-headline-2-md--line-height);
+  }
+}
+
+@utility subtitle-1 {
+  font-size: var(--text-subtitle-1);
+  line-height: var(--text-subtitle-1--line-height);
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-sans);
+}
+
+@utility subtitle-2 {
+  font-size: var(--text-subtitle-2);
+  line-height: var(--text-subtitle-2--line-height);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-sans);
+}
+
+@utility body {
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+}

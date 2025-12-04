@@ -1,0 +1,114 @@
+@utility dialog-overlay {
+  background-color: rgb(from var(--color-surface-invert) r g b / 0.6);
+  backdrop-filter: blur(var(--blur-xs));
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+
+  &[data-state='open'] {
+    animation: fadeIn 150ms ease-in-out;
+  }
+  &[data-state='closed'] {
+    animation: fadeOut 150ms ease-in-out;
+  }
+}
+
+@utility dialog-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+
+  &[data-state='open'] {
+    animation:
+      fadeIn 150ms ease-in forwards,
+      slideInFromBottom 200ms ease-out forwards;
+  }
+  &[data-state='closed'] {
+    animation:
+      fadeOut 150ms ease-in-out forwards,
+      slideOutFromBottom 150ms ease-in-out forwards;
+  }
+
+  @media (min-width: 640px) {
+    align-items: center;
+
+    &[data-state='open'] {
+      animation:
+        fadeIn 150ms ease-in forwards,
+        zoomIn 100ms ease-in-out forwards;
+    }
+    &[data-state='closed'] {
+      animation:
+        fadeOut 150ms ease-in-out forwards,
+        zoomOut 150ms ease-in-out forwards;
+    }
+  }
+}
+
+@utility dialog-content_wrapper {
+  background-color: var(--color-surface-surfaces);
+
+  width: 100%;
+  padding: var(--spacing-lg);
+  border-block-start: solid 1px var(--color-border-primary);
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
+
+  @media (min-width: 640px) {
+    max-width: var(--container-lg);
+    border: solid 1px var(--color-border-primary);
+    border-radius: var(--radius-sm);
+  }
+}
+
+@utility dialog-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: var(--spacing-sm);
+  margin-block-end: var(--spacing-sm);
+}
+
+@utility dialog-footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--spacing-xs);
+  margin-block-start: var(--spacing-lg);
+  @media (min-width: 640px) {
+    flex-direction: row;
+    justify-content: end;
+  }
+}
+
+@utility dialog-title {
+  color: var(--color-text-title);
+}
+
+@utility dialog-close {
+  padding: var(--spacing-xxs);
+  color: var(--color-text-title);
+  background-color: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+  @variant hover {
+    background-color: var(--color-btn-tertiary-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-tertiary-pressed);
+  }
+}
+
+@utility dialog-close-icon {
+  block-size: 1.5rem;
+  inline-size: 1.5rem;
+}
+
+@utility dialog-description {
+  color: var(--color-text-body);
+  text-wrap: pretty;
+}

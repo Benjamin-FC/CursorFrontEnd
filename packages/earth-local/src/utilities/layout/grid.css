@@ -1,0 +1,19 @@
+@utility grid-container {
+  display: grid;
+  width: 100%;
+  align-items: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-inline: auto;
+
+  &[data-contained='true'] {
+    max-width: 750px;
+  }
+
+  @variant md {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  @variant lg {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}

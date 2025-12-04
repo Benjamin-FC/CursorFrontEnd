@@ -1,0 +1,153 @@
+@utility icon-btn {
+  --border: transparent;
+  --ring: transparent;
+  --ring-width: 0px;
+  --border-radius: var(--radius-sm); /* Default border radius */
+  --icon-size: 1.25rem; /* Default icon size */
+  --text-size: 1rem; /* Default text size */
+
+  inline-size: 100%;
+  text-transform: uppercase;
+
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border);
+  border-radius: var(--radius-full);
+
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--text-base);
+
+  transition-property: all;
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+
+  cursor: pointer;
+  outline-style: none;
+  box-shadow: 0 0 0 var(--ring-width) var(--ring);
+  aspect-ratio: 1;
+  overflow: hidden;
+
+  & > span > *,
+  & > span > svg {
+    inline-size: var(--icon-size);
+    block-size: var(--icon-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  & > span {
+    font-size: var(--text-size);
+    line-height: var(--text-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  @variant focus-visible {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant active {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant focus {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant disabled {
+    &:not([data-loading='true']) {
+      pointer-events: none;
+      cursor: not-allowed;
+      opacity: 0.25;
+    }
+
+    &[data-loading='true'] {
+      cursor: wait;
+      opacity: 0.5;
+    }
+  }
+}
+
+@utility icon-btn-primary {
+  background-color: var(--color-btn-primary);
+  color: var(--color-text-onbrand);
+  @variant hover {
+    background-color: var(--color-btn-primary-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-primary-pressed);
+  }
+}
+
+@utility icon-btn-secondary {
+  --border: var(--color-brand-secondary);
+  color: var(--color-brand-secondary);
+  @variant hover {
+    background-color: var(--color-btn-secondary-hover);
+    color: var(--color-text-onbrand);
+  }
+  @variant active {
+    background-color: var(--color-btn-secondary-pressed);
+  }
+}
+
+@utility icon-btn-danger {
+  background-color: var(--color-btn-danger);
+  color: var(--color-text-onbrand);
+  @variant hover {
+    background-color: var(--color-btn-danger-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-danger-pressed);
+  }
+}
+
+@utility icon-btn-tertiary {
+  color: var(--color-text-body);
+  background-color: transparent;
+  @variant hover {
+    background-color: var(--color-btn-tertiary-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-tertiary-pressed);
+  }
+}
+
+@utility icon-btn-sm {
+  --icon-size: 1rem;
+  --text-size: 0.875rem;
+  padding: calc((var(--spacing) * 0.5) - 1px);
+  font-size: var(--text-sm);
+  max-inline-size: calc(var(--spacing) * 7);
+}
+
+@utility icon-btn-md {
+  --icon-size: 1.125rem;
+  --text-size: 1rem;
+  padding: calc((var(--spacing) * 1) - 1px);
+  font-size: var(--text-base);
+  max-inline-size: calc(var(--spacing) * 8);
+}
+
+@utility icon-btn-base {
+  --icon-size: 1.25rem;
+  --text-size: 1.125rem;
+  padding: calc((var(--spacing) * 2) - 1px);
+  font-size: var(--text-base);
+  max-inline-size: calc(var(--spacing) * 10);
+  font-size: var(--text-lg);
+}

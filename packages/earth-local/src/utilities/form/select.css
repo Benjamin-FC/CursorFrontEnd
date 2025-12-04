@@ -1,0 +1,171 @@
+@custom-variant hover-focus-visible (&:hover, &:focus-visible);
+
+@utility select {
+  --invalid-select-color: var(--color-border-danger);
+  --select-border: 1px solid var(--color-border-input);
+  --select-border-hover: 1px solid var(--color-border-focused);
+  --select-border-focus: 2px solid var(--color-border-focused);
+  --select-height: 2.875rem;
+  --select-padding: var(--spacing-sm);
+
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--select-height);
+  padding: var(--select-padding);
+  border: var(--select-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-body);
+
+  &[data-placeholder] {
+    color: color-mix(in srgb, var(--color-text-placeholder) 50%, transparent);
+  }
+
+  @variant aria-disabled {
+    opacity: 0.5;
+  }
+
+  @variant aria-invalid {
+    border-color: var(--invalid-select-color);
+  }
+
+  @variant hover {
+    &:not(:disabled):not(:focus) {
+      border: var(--select-border-hover);
+    }
+  }
+
+  @variant focus-visible {
+    outline: var(--select-border-focus);
+    border: none;
+  }
+
+  &[data-state='open'] {
+    outline: var(--select-border-focus);
+    border: none;
+
+    svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+@utility select-content {
+  --select-content-bg: var(--color-surface-background);
+  --select-content-border: 1px solid var(--color-border-input);
+  --select-content-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.1), 0 1px 12px rgba(0, 0, 0, 0.1);
+
+  inline-size: var(--radix-select-trigger-width, 300px);
+  max-block-size: calc(var(--radix-popper-anchor-height) * 6);
+  border-radius: var(--radius-sm);
+  background-color: var(--select-content-bg);
+  box-shadow: var(--select-content-shadow);
+  border: var(--select-content-border);
+  position: relative;
+  z-index: 50;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  &[data-position='popper'] {
+    &[data-side='bottom'],
+    &[data-side='top'] {
+      transform: translateY(0.25rem);
+    }
+  }
+}
+
+@utility select-item {
+  padding: var(--spacing-sm);
+  cursor: default;
+  outline: none;
+
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+  }
+
+  @variant hover-focus-visible {
+    &:not([aria-disabled='true']) {
+      font-weight: 600;
+      background-color: color-mix(
+        in srgb,
+        var(--color-surface-brand) 6%,
+        transparent
+      );
+    }
+  }
+}
+
+@utility select-viewport {
+  width: 100%;
+  height: var(--radix-select-trigger-height);
+  min-width: var(--radix-select-trigger-width);
+  scroll-margin: var(--spacing-sm);
+}
+
+@utility chevron {
+  color: var(--color-text-body);
+  size: 1.375rem;
+}
+
+@utility scroll-arrows {
+  display: flex;
+  cursor: default;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) 0;
+}
+
+/* This is for HTML Select only */
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+    color: var(--color-text-body);
+  }
+
+  select::picker-icon {
+    position: relative;
+    bottom: 2px;
+    /* Data URI for lucide Chevron down https://lucide.dev/icons/chevron-down
+			replaces default select icon in browsers that support it */
+    mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNoZXZyb24tZG93bi1pY29uIGx1Y2lkZS1jaGV2cm9uLWRvd24iPjxwYXRoIGQ9Im02IDkgNiA2IDYtNiIvPjwvc3ZnPg==');
+    background-color: currentColor;
+    width: 20px;
+    height: 16px;
+    cursor: pointer;
+  }
+  select:open::picker-icon {
+    rotate: 180deg;
+    top: 0;
+  }
+  select::picker {
+    --select-content-bg: var(--color-surface-background);
+    --select-content-border: 1px solid var(--color-border-input);
+    --select-content-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.1), 0 1px 12px rgba(0, 0, 0, 0.1);
+
+    margin-top: var(--spacing-xxs);
+    border-radius: var(--radius-sm);
+    background-color: var(--select-content-bg);
+    box-shadow: var(--select-content-shadow);
+    border: var(--select-content-border);
+    max-height: var(--radix-select-content-available-height);
+    position: relative;
+    z-index: 50;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    &[data-position='popper'] {
+      &[data-side='bottom'],
+      &[data-side='top'] {
+        transform: translateY(0.25rem);
+      }
+    }
+  }
+  option::checkmark {
+    display: none;
+  }
+}

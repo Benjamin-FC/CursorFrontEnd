@@ -1,0 +1,32 @@
+@utility link {
+  display: inline-flex;
+  gap: var(--spacing-xxs);
+  color: var(--color-text-body);
+  transition: color 0.2s ease;
+  font-size: var(--text-subtitle-1);
+  line-height: var(--text-subtitle-1--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+
+  @variant hover {
+    text-decoration: underline;
+    color: var(--color-text-link);
+  }
+
+  @variant active {
+    text-decoration: none;
+    color: var(--color-text-body);
+  }
+
+  @variant aria-disabled {
+    cursor: not-allowed;
+    color: var(--color-text-disabled);
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  @variant focus-visible {
+    outline-color: var(--color-border-focused);
+  }
+}

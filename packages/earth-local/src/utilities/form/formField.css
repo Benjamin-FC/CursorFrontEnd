@@ -1,0 +1,20 @@
+@utility form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+
+  span {
+    color: var(--color-text-caption);
+  }
+}
+
+@utility form-field-label {
+  --form-field-label-height: 1.5rem;
+
+  height: var(--form-field-label-height);
+  width: 100%;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: var(--spacing-xxs);
+}

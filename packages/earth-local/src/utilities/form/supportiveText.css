@@ -1,0 +1,16 @@
+@utility supportive-text {
+  --text-supportive-text: text-sm;
+  --supportive-color: var(--color-text-body);
+  --error-color: var(--color-text-red);
+
+  cursor: default;
+  display: inline-flex;
+  font-size: var(--text-supportive-text);
+  color: var(--supportive-color);
+  gap: var(--spacing-xxs);
+  align-items: center;
+
+  &[data-type='error'] {
+    color: var(--error-color);
+  }
+}

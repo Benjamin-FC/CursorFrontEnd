@@ -1,0 +1,128 @@
+@utility btn {
+  --border: transparent;
+  --ring: transparent;
+  --ring-width: 0px;
+  --border-radius: var(--radius-sm); /* Default border radius */
+
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--border);
+  border-radius: var(--border-radius); /* Use custom property */
+
+  white-space: nowrap;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--text-base);
+
+  transition-property: all;
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+
+  cursor: pointer;
+  outline-style: none;
+  box-shadow: 0 0 0 var(--ring-width) var(--ring);
+
+  @variant focus-visible {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant active {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant focus {
+    --ring: var(--color-ring);
+    --ring-width: 2px;
+  }
+
+  @variant disabled {
+    &:not([data-loading='true']) {
+      pointer-events: none;
+      cursor: not-allowed;
+      opacity: 0.25;
+    }
+
+    &[data-loading='true'] {
+      cursor: wait;
+      opacity: 0.5;
+    }
+  }
+}
+
+@utility btn-primary {
+  background-color: var(--color-btn-primary);
+  color: var(--color-text-onbrand);
+  @variant hover {
+    background-color: var(--color-btn-primary-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-primary-pressed);
+  }
+}
+
+@utility btn-secondary {
+  --border: var(--color-brand-secondary);
+  color: var(--color-brand-secondary);
+  @variant hover {
+    background-color: var(--color-btn-secondary-hover);
+    color: var(--color-text-onbrand);
+  }
+  @variant active {
+    background-color: var(--color-btn-secondary-pressed);
+  }
+}
+
+@utility btn-danger {
+  background-color: var(--color-btn-danger);
+  color: var(--color-text-onbrand);
+  @variant hover {
+    background-color: var(--color-btn-danger-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-danger-pressed);
+  }
+}
+
+@utility btn-tertiary {
+  color: var(--color-text-title);
+  background-color: transparent;
+  text-decoration: underline;
+  @variant hover {
+    background-color: var(--color-btn-tertiary-hover);
+  }
+  @variant active {
+    background-color: var(--color-btn-tertiary-pressed);
+  }
+}
+
+@utility btn-xs {
+  padding-inline: calc(var(--spacing) * 2.5);
+  padding-block: calc(var(--spacing) * 1.25);
+  font-size: var(--text-base);
+}
+
+@utility btn-sm {
+  padding-inline: calc(var(--spacing) * 3);
+  padding-block: calc(var(--spacing) * 1.75);
+  font-size: var(--text-base);
+}
+
+@utility btn-base {
+  padding-inline: calc(var(--spacing) * 3.5);
+  padding-block: calc(var(--spacing) * 2.5);
+  font-size: var(--text-base);
+}
+
+@utility btn-full-width {
+  inline-size: 100%;
+}
+
+@utility btn-rounded {
+  border-radius: var(--radius-full);
+}

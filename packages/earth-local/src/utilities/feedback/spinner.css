@@ -1,0 +1,6 @@
+@utility spinner {
+  width: 2em;
+  height: 2rem;
+  color: var(--color-brand-secondary);
+  animation: spin 1s linear infinite;
+}

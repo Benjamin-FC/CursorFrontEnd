@@ -1,0 +1,8 @@
+@utility label {
+  color: var(--color-text-title);
+  font-size: var(--text-subtitle-1, 1rem);
+  font-weight: 500;
+  display: flex;
+  gap: var(--spacing-xxs);
+  align-items: center;
+}

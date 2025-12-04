@@ -1,0 +1,60 @@
+@utility toast {
+  --toast-border: rgba(0, 0, 0, 0.1);
+  --toast-close-button-color: var(--color-text-title);
+
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--toast-border);
+  border-radius: var(--radius-sm);
+
+  &.alert-info {
+    --toast-border: rgba(0, 0, 0, 0.1);
+    --alert-background-color: var(--color-surface-invert);
+    --alert-icon-color: var(--color-text-onbrand);
+    --alert-text-color: var(--color-text-onbrand);
+    --toast-close-button-color: var(--color-text-onbrand);
+  }
+
+  &.alert-success {
+    --toast-border: rgb(from var(--color-text-green) r g b / 0.1);
+  }
+
+  &.alert-warning {
+    --toast-border: rgb(from var(--color-text-yellow) r g b / 0.1);
+  }
+
+  &.alert-error {
+    --toast-border: rgb(from var(--color-text-red) r g b / 0.1);
+  }
+
+  @media (min-width: 640px) {
+    min-inline-size: 380px;
+  }
+}
+
+@utility toast-has-description {
+  padding-inline-start: var(--spacing-md) !important;
+
+  & > .alert-header {
+    margin-left: 0;
+  }
+}
+
+@utility toast-title {
+  flex-grow: 1;
+}
+
+@utility toast-button {
+  display: flex;
+  cursor: pointer;
+  box-sizing: border-box;
+  background-color: transparent;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease-in-out;
+  color: var(--toast-close-button-color);
+}
+
+@utility toast-button-icon {
+  aspect-ratio: 1;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}

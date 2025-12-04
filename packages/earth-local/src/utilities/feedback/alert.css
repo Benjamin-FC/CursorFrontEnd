@@ -1,0 +1,68 @@
+@utility alert {
+  --alert-icon-color: transparent;
+  --alert-background-color: transparent;
+  --alert-text-color: var(--color-text-title);
+
+  padding: var(--spacing-md);
+  padding-inline-start: calc(var(--spacing) * 14);
+  box-sizing: border-box;
+  border-radius: var(--radius-none);
+  background-color: var(--alert-background-color);
+}
+
+@utility alert-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: calc(var(--spacing) * 3.5);
+  margin-left: calc(var(--spacing) * -8.5);
+}
+
+@utility alert-icon-container {
+  display: flex;
+  justify-content: start;
+  align-items: start;
+}
+
+@utility alert-icon {
+  color: var(--alert-icon-color);
+  width: 1.25rem;
+  height: 1lh;
+}
+
+@utility alert-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-snug);
+  text-wrap: pretty;
+  color: var(--alert-text-color);
+}
+
+@utility alert-description {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  text-wrap: pretty;
+  grid-column-start: 2;
+  color: var(--alert-text-color);
+}
+
+@utility alert-info {
+  --alert-icon-color: var(--color-text-title);
+  --alert-background-color: var(--color-surface-tertiary);
+}
+
+@utility alert-warning {
+  --alert-icon-color: var(--color-text-yellow);
+  --alert-background-color: var(--color-surface-yellow);
+}
+
+@utility alert-success {
+  --alert-icon-color: var(--color-text-green);
+  --alert-background-color: var(--color-surface-green);
+}
+
+@utility alert-error {
+  --alert-icon-color: var(--color-btn-danger);
+  --alert-background-color: var(--color-surface-red);
+}

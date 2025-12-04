@@ -1,0 +1,102 @@
+@utility radio-group {
+  inline-size: 100%;
+  display: grid;
+  gap: var(--spacing-xs);
+
+  @variant aria-invalid {
+    --border-color: var(--color-text-red);
+    --radio-group-item-color: var(--color-text-red);
+
+    .radio-group-item-box,
+    .radio-group-item {
+      --radio-group-item-color: var(--color-text-red);
+      --border-color: var(--color-text-red);
+      --radio-group-item-color: var(--color-text-red);
+    }
+  }
+
+  &:has([aria-invalid]) @variant data-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    & .radio-group-item-label {
+      cursor: not-allowed;
+    }
+  }
+}
+
+@utility radio-group-item-box {
+  --radio-group-item-color: var(--color-text-body);
+  --border-width: 2px;
+  --border-color: var(--color-border-input);
+
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+@utility radio-group-item {
+  outline-style: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--border-color);
+  border-radius: var(--radius-full);
+
+  aspect-ratio: 1/1;
+  flex-shrink: 0;
+
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+
+  cursor: pointer;
+
+  @variant focus-visible {
+    box-shadow: 0 0 0 1px var(--color-ring);
+  }
+
+  @variant disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @variant aria-checked {
+    --border-color: var(--color-surface-brand);
+    --radio-group-item-color: var(--color-surface-brand);
+  }
+}
+
+@utility radio-group-item-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  inline-size: 100%;
+  block-size: 100%;
+
+  padding: var(--spacing-xxs);
+  box-sizing: border-box;
+}
+
+@utility radio-group-item-indicator-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--radio-group-item-color);
+  border-radius: var(--radius-full);
+
+  inline-size: 100%;
+  block-size: 100%;
+
+  margin: auto;
+}
+
+@utility radio-group-item-label {
+  color: var(--radio-group-item-color);
+  cursor: pointer;
+
+  @variant aria-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

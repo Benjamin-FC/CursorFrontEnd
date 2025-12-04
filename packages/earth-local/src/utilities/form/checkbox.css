@@ -1,0 +1,103 @@
+@utility checkbox-group {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+@utility checkbox-group-label {
+  margin-block-end: var(--spacing-xs);
+
+  @variant aria-disabled {
+    opacity: 0.5;
+  }
+}
+
+@utility checkbox-box {
+  --checkbox-color: var(--color-text-body);
+  --border-color: var(--color-border-input);
+  --checkbox-label-color: var(--color-text-body);
+
+  inline-size: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+@utility checkbox {
+  outline-style: none;
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--border-color);
+  border-radius: var(--radius-sm);
+
+  aspect-ratio: 1/1;
+  flex-shrink: 0;
+
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+
+  cursor: pointer;
+
+  @variant aria-checked {
+    --border-color: var(--color-surface-brand);
+    --checkbox-color: var(--color-surface-brand);
+    --checkbox-label-color: var(--color-text-onbrand);
+  }
+
+  @variant aria-invalid {
+    --border-color: var(--color-border-danger);
+    --checkbox-color: var(--color-text-red);
+    --checkbox-label-color: var(--color-text-red);
+  }
+
+  @variant focus-visible {
+    box-shadow: 0 0 0 1px var(--color-ring);
+  }
+
+  @variant disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@utility checkbox-indicator {
+  position: re tive;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--checkbox-color);
+  border-radius: var(--radius-xs);
+
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+@utility checkbox-indicator-icon {
+  color: var(--color-text-onbrand);
+  inline-size: 1rem;
+  block-size: 1rem;
+  stroke-width: 3px;
+}
+
+@utility checkbox-label {
+  color: var(--checkbox-label-color);
+  cursor: pointer;
+
+  @variant aria-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @variant aria-invalid {
+    color: var(--color-text-red);
+  }
+}
+
+@utility checkbox-group-options {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-inline-start: var(--spacing-md);
+}

@@ -1,0 +1,83 @@
+@utility switch {
+  --thumb-translate: 0px;
+  --thumb-bg-color: var(--color-surface-tertiary);
+  --thumb-outline-width: 0px;
+
+  margin: 12px;
+  display: inline-flex;
+  height: 14px; /* special case for this component we will hard code it to make sure the track is consitent & matches Figma */
+  width: 34px;
+  align-items: center;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-input);
+  cursor: pointer;
+
+  transition-property: background-color, translate;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function) /* cubic-bezier(0.4, 0, 0.2, 1) */
+  );
+  transition-duration: var(
+    --tw-duration,
+    var(--default-transition-duration) /* 150ms */
+  );
+
+  &[aria-checked='true'],
+  &:has(input:checked) {
+    --thumb-translate: 16px;
+    --thumb-bg-color: var(--color-brand-primary);
+    background-color: color-mix(
+      in oklab,
+      var(--color-brand-primary) /* var(--color-brand-primary) */ 30%,
+      transparent
+    );
+  }
+
+  &[aria-checked='true'],
+  &:has(input:focus-visible) {
+    --thumb-outline-width: 9px;
+  }
+
+  &:has(input:disabled),
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    background-color: var(--color-text-disabled);
+    --thumb-bg-color: var(--color-surface-tertiary);
+  }
+}
+
+@utility switch-thumb {
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  border-radius: var(--radius-full);
+  background-color: var(--thumb-bg-color);
+  translate: var(--thumb-translate) 0;
+  filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.2))
+    drop-shadow(0 1px 1px rgba(0, 0, 0, 0.14))
+    drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12));
+
+  transition-property: background-color, translate;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function) /* cubic-bezier(0.4, 0, 0.2, 1) */
+  );
+  transition-duration: var(
+    --tw-duration,
+    var(--default-transition-duration) /* 150ms */
+  );
+  outline-color: color-mix(
+    in oklab,
+    var(--color-brand-primary) /* var(--color-brand-primary) */ 30%,
+    transparent
+  );
+  outline-style: solid;
+  outline-width: var(--thumb-outline-width);
+}
+
+@utility switch-label {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+}

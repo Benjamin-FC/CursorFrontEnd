@@ -1,0 +1,36 @@
+{
+  "name": "@frankcrum/earth",
+  "version": "0.5.2",
+  "author": "Jaime Burbano, Bert Bengtson, Cody Blankenship",
+  "description": "Base Themes for FrankCrum's Earth Design System",
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "style": "./dist/index.css",
+      "default": "./dist/index.css"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "storybook": "vite build --watch",
+    "build": "vite build",
+    "lint": "biome check",
+    "lint:fix": "biome lint --write ./src",
+    "format": "biome format --write",
+    "prepublishOnly": "npm run build && publint"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.5",
+    "tailwind-variants": "^1.0.0"
+  }
+}

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@frankcrum/earth':
-        specifier: git+https://github.com/Benjamin-FC/design-system.git#main
-        version: frankcrum-designsystem-monorepo@https://codeload.github.com/Benjamin-FC/design-system/tar.gz/e12f8eff030d75b1d6e6e8ef19dc28797159f2b3
+        specifier: file:../../packages/earth-local
+        version: file:../../packages/earth-local(tailwindcss@4.1.17)
       react:
         specifier: ^19.2.0
         version: 19.2.1
@@ -340,6 +340,14 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource-variable/inter@5.2.8':
+    resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
+
+  '@frankcrum/earth@file:../../packages/earth-local':
+    resolution: {directory: ../../packages/earth-local, type: directory}
+    peerDependencies:
+      tailwindcss: ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -798,11 +806,6 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
-  frankcrum-designsystem-monorepo@https://codeload.github.com/Benjamin-FC/design-system/tar.gz/e12f8eff030d75b1d6e6e8ef19dc28797159f2b3:
-    resolution: {tarball: https://codeload.github.com/Benjamin-FC/design-system/tar.gz/e12f8eff030d75b1d6e6e8ef19dc28797159f2b3}
-    version: 0.0.0
-    engines: {node: '>=22', pnpm: ^10.11.0}
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1101,6 +1104,15 @@ packages:
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
+
+  tailwind-merge@3.0.2:
+    resolution: {integrity: sha512-l7z+OYZ7mu3DTqrL88RiKrKIqO3NcpEO8V/Od04bNpvk0kiIFndGEoqfuzvj4yuhRkHKjRkII2z+KS2HfPcSxw==}
+
+  tailwind-variants@1.0.0:
+    resolution: {integrity: sha512-2WSbv4ulEEyuBKomOunut65D8UZwxrHoRfYnxGcQNnHqlSCp2+B7Yz2W+yrNDrxRodOXtGD/1oCcKGNBnUqMqA==}
+    engines: {node: '>=16.x', pnpm: '>=7.x'}
+    peerDependencies:
+      tailwindcss: '*'
 
   tailwindcss@4.1.17:
     resolution: {integrity: sha512-j9Ee2YjuQqYT9bbRTfTZht9W/ytp5H+jJpZKiYdP/bpnXARAuELt9ofP0lPnmHjbga7SNQIxdTAXCmtKVYjN+Q==}
@@ -1430,6 +1442,14 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@fontsource-variable/inter@5.2.8': {}
+
+  '@frankcrum/earth@file:../../packages/earth-local(tailwindcss@4.1.17)':
+    dependencies:
+      '@fontsource-variable/inter': 5.2.8
+      tailwind-variants: 1.0.0(tailwindcss@4.1.17)
+      tailwindcss: 4.1.17
 
   '@humanfs/core@0.19.1': {}
 
@@ -1865,8 +1885,6 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  frankcrum-designsystem-monorepo@https://codeload.github.com/Benjamin-FC/design-system/tar.gz/e12f8eff030d75b1d6e6e8ef19dc28797159f2b3: {}
-
   fsevents@2.3.3:
     optional: true
 
@@ -2116,6 +2134,13 @@ snapshots:
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
+
+  tailwind-merge@3.0.2: {}
+
+  tailwind-variants@1.0.0(tailwindcss@4.1.17):
+    dependencies:
+      tailwind-merge: 3.0.2
+      tailwindcss: 4.1.17
 
   tailwindcss@4.1.17: {}
 

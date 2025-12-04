@@ -1,0 +1,14 @@
+@utility tooltip {
+  --tooltip-padding: var(--spacing-xs);
+  --tooltip-background: var(--color-surface-invert);
+  --tooltip-color: var(--color-text-onbrand);
+
+  width: max-content;
+  max-width: 300px;
+  font-size: var(--font-size-xs, 0.875rem);
+  text-align: center;
+  color: var(--tooltip-color);
+  background-color: var(--tooltip-background);
+  padding: var(--tooltip-padding);
+  border-radius: var(--radius-sm);
+}

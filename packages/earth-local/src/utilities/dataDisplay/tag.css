@@ -1,0 +1,53 @@
+@utility earth-tag {
+  display: inline-flex;
+  align-items: center;
+
+  font-size: var(--font-size-subtitle-1);
+
+  border-radius: var(--radius-xxl);
+  font-size: var(--text-subtitle-1);
+  line-height: var(--text-subtitle-1--line-height);
+  font-weight: var(--font-weight-normal);
+  font-family: var(--font-sans);
+
+  /* Default styles */
+
+  /*Default neutral  */
+  background-color: var(--color-surface-tertiary);
+  color: var(--color-text-body);
+  /*Default large  */
+  gap: var(--spacing-xs);
+  padding-inline: var(--spacing-sm);
+  padding-block: var(--spacing-xs);
+}
+
+@utility earth-tag-sm {
+  gap: var(--spacing-xxs);
+  padding-inline: var(--spacing-xs);
+  padding-block: var(--spacing-xxs);
+}
+
+@utility earth-tag-informational {
+  background-color: var(--color-surface-purple);
+  color: var(--color-text-purple);
+}
+
+@utility earth-tag-guidance {
+  background-color: var(--color-surface-blue);
+  color: var(--color-text-blue);
+}
+
+@utility earth-tag-error {
+  background-color: var(--color-surface-red);
+  color: var(--color-text-red);
+}
+
+@utility earth-tag-warning {
+  background-color: var(--color-surface-yellow);
+  color: var(--color-text-yellow);
+}
+
+@utility earth-tag-success {
+  background-color: var(--color-surface-green);
+  color: var(--color-text-green);
+}

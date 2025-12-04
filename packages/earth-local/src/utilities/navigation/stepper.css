@@ -1,0 +1,114 @@
+@utility stepper__list {
+  display: none;
+  flex-direction: column;
+
+  & li:last-child > .step > .step__divider {
+    display: none;
+  }
+
+  @variant md {
+    display: flex;
+  }
+}
+
+@utility step {
+  --color-border: var(--color-border-primary);
+  --color-background: transparent;
+  --color-background-line: var(--color-border-primary);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  &[data-status='current'] {
+    --color-border: var(--color-brand-secondary);
+  }
+}
+
+@utility step-completed {
+  --color-border: var(--color-brand-secondary);
+  --color-background: var(--color-brand-secondary);
+  --color-background-line: var(--color-brand-secondary);
+}
+
+@utility step-completed {
+  --color-border: var(--color-brand-secondary);
+  --color-background: var(--color-brand-secondary);
+  --color-background-line: var(--color-brand-secondary);
+}
+
+@utility step__content {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+
+@utility step__indicator {
+  inline-size: 32px;
+  block-size: 32px;
+  aspect-ratio: 1;
+  border: solid 2px var(--color-border);
+  border-radius: var(--radius-full);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--color-background);
+}
+
+@utility step__indicator-current {
+  background-color: var(--color-brand-secondary);
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: var(--radius-full);
+}
+
+@utility step__indicator-icon {
+  color: var(--color-text-onbrand);
+  inline-size: 1rem;
+  stroke-width: 4px;
+}
+@utility step__content-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+@utility step__title {
+  color: var(--color-text-body);
+}
+
+@utility step__divider {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 1rem;
+  padding-inline: 15px;
+}
+
+@utility step__divider-line {
+  inline-size: 2px;
+  min-block-size: 2rem;
+  block-size: 100%;
+  background-color: var(--color-background-line);
+}
+
+@utility stepper__mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  border-block-end: solid 1px var(--color-border-primary);
+  padding-inline: var(--spacing-lg);
+  padding-block: var(--spacing-sm);
+  box-sizing: border-box;
+
+  @variant md {
+    display: none;
+  }
+}

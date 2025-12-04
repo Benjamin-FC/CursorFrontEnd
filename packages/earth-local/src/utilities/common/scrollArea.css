@@ -1,0 +1,42 @@
+@utility scroll-area {
+  display: relative;
+}
+
+@utility scroll-area-viewport {
+  inline-size: 100%;
+  block-size: 100%;
+
+  border-radius: inherit;
+  transition-property: color, box-shadow;
+  outline: none;
+
+  @variant focus-visible {
+    box-shadow: 0 0 0 3px var(--color-ring);
+    outline: 1px solid transparent;
+  }
+}
+
+@utility scroll-area-scrollbar {
+  display: flex;
+  touch-action: none;
+  padding: 1px;
+  box-sizing: border-box;
+  user-select: none;
+
+  &[data-orientation='vertical'] {
+    inline-size: 10px;
+    block-size: 100%;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: transparent;
+  }
+
+  &[data-orientation='horizontal'] {
+    flex-direction: column;
+    inline-size: 100%;
+    block-size: 10px;
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: transparent;
+  }
+}

@@ -1,0 +1,29 @@
+.divider {
+  --divider-margin: var(--spacing-sm);
+  display: block;
+  background-color: var(--color-border-primary);
+
+  &[data-orientation='horizontal'] {
+    inline-size: 100%;
+    block-size: 1px;
+    margin-block: var(--divider-margin);
+  }
+
+  &[data-orientation='vertical'] {
+    inline-size: 1px;
+    block-size: 100%;
+    margin-inline: var(--divider-margin);
+  }
+
+  &[data-margin='sm'] {
+    --divider-margin: var(--spacing-sm);
+  }
+
+  &[data-margin='md'] {
+    --divider-margin: var(--spacing-lg);
+  }
+
+  &[data-margin='lg'] {
+    --divider-margin: var(--spacing-xxl);
+  }
+}
