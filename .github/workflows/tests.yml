@@ -52,33 +52,81 @@ jobs:
       id: stats
       if: always()
       run: |
-        # Parse test results from TRX file using dotnet test output or TRX parsing
-        # Try multiple patterns to extract statistics
-        TOTAL=$(grep -iE "Total tests:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-        PASSED=$(grep -iE "Passed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-        FAILED=$(grep -iE "Failed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-        SKIPPED=$(grep -iE "Skipped:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+        echo "=== Parsing test statistics ==="
+        echo "Checking test output file..."
+        ls -la test-output.txt || echo "test-output.txt not found"
+        echo ""
+        echo "Last 50 lines of test output:"
+        tail -50 test-output.txt || echo "Could not read test output"
+        echo ""
         
-        # Alternative parsing from summary line
-        if [ "$TOTAL" = "0" ]; then
-          SUMMARY=$(grep -iE "Test Run (Successful|Failed)" test-output.txt || grep -iE "(\d+)\s+test\(s\)" test-output.txt | tail -1)
-          if [ -n "$SUMMARY" ]; then
-            TOTAL=$(echo "$SUMMARY" | grep -oE "\d+" | head -1 || echo "0")
+        # Try to find TRX file first (most reliable)
+        TRX_FILE=$(find . -name "test-results.trx" -o -name "*.trx" | head -1)
+        if [ -n "$TRX_FILE" ] && [ -f "$TRX_FILE" ]; then
+          echo "Found TRX file: $TRX_FILE"
+          # Parse from TRX XML file
+          TOTAL=$(grep -oE 'tests="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
+          PASSED=$(grep -oE 'passed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
+          FAILED=$(grep -oE 'failed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
+          EXECUTED=$(grep -oE 'executed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
+          
+          # If executed is set but total is not, use executed
+          if [ "$TOTAL" = "0" ] && [ "$EXECUTED" != "0" ]; then
+            TOTAL=$EXECUTED
           fi
+          
+          echo "Parsed from TRX: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED"
         fi
         
-        # Parse from TRX file if available
-        if [ -f "**/test-results.trx" ] && [ "$TOTAL" = "0" ]; then
-          TRX_FILE=$(find . -name "test-results.trx" | head -1)
-          if [ -n "$TRX_FILE" ]; then
-            TOTAL=$(grep -oE 'total="(\d+)"' "$TRX_FILE" | grep -oE '\d+' || echo "0")
-            PASSED=$(grep -oE 'passed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' || echo "0")
-            FAILED=$(grep -oE 'failed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' || echo "0")
-            SKIPPED=$(grep -oE 'skipped="(\d+)"' "$TRX_FILE" | grep -oE '\d+' || echo "0")
+        # If TRX parsing didn't work, try console output patterns
+        if [ "$TOTAL" = "0" ] || [ -z "$TOTAL" ]; then
+          echo "Parsing from console output..."
+          
+          # Pattern 1: "Total tests: X"
+          TOTAL=$(grep -iE "Total tests?:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+          
+          # Pattern 2: "Passed! - Failed: X, Passed: Y"
+          if [ "$PASSED" = "0" ] || [ -z "$PASSED" ]; then
+            PASSED=$(grep -iE "Passed!?\s*-\s+Failed:\s+\d+,\s+Passed:\s+(\d+)" test-output.txt | grep -oE "\d+" | tail -1 || echo "0")
           fi
+          
+          # Pattern 3: "Passed: X"
+          if [ "$PASSED" = "0" ] || [ -z "$PASSED" ]; then
+            PASSED=$(grep -iE "Passed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+          fi
+          
+          # Pattern 4: "Failed: X"
+          if [ "$FAILED" = "0" ] || [ -z "$FAILED" ]; then
+            FAILED=$(grep -iE "Failed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+          fi
+          
+          # Pattern 5: "Skipped: X"
+          SKIPPED=$(grep -iE "Skipped:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+          
+          # Pattern 6: Summary line like "Test Run Successful. Total tests: X, Passed: Y, Failed: Z"
+          if [ "$TOTAL" = "0" ]; then
+            SUMMARY_LINE=$(grep -iE "Test Run.*Total tests?:\s*(\d+)" test-output.txt | tail -1)
+            if [ -n "$SUMMARY_LINE" ]; then
+              TOTAL=$(echo "$SUMMARY_LINE" | grep -oE "Total tests?:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
+              PASSED=$(echo "$SUMMARY_LINE" | grep -oE "Passed:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
+              FAILED=$(echo "$SUMMARY_LINE" | grep -oE "Failed:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
+            fi
+          fi
+          
+          # Pattern 7: X test(s) format
+          if [ "$TOTAL" = "0" ]; then
+            TOTAL=$(grep -iE "(\d+)\s+test\(s\)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
+          fi
+          
+          echo "Parsed from console: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED"
         fi
         
-        # Set defaults if still zero
+        # Calculate total if we have passed and failed
+        if [ "$TOTAL" = "0" ] && [ "$PASSED" != "0" ] || [ "$FAILED" != "0" ]; then
+          TOTAL=$((PASSED + FAILED + SKIPPED))
+        fi
+        
+        # Set defaults
         TOTAL=${TOTAL:-0}
         PASSED=${PASSED:-0}
         FAILED=${FAILED:-0}
@@ -89,7 +137,8 @@ jobs:
         echo "failed=$FAILED" >> $GITHUB_OUTPUT
         echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
         
-        echo "📊 Test Statistics:"
+        echo ""
+        echo "📊 Final Test Statistics:"
         echo "  Total: $TOTAL"
         echo "  Passed: $PASSED"
         echo "  Failed: $FAILED"
