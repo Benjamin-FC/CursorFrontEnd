@@ -1,5 +1,9 @@
 # CRM Client Data Fetcher
 
+![Tests](https://github.com/Benjamin-FC/CursorFrontEnd/actions/workflows/tests.yml/badge.svg)
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
+
 A C# ASP.NET Core Web API backend with a React/Vite frontend that connects to an external CRM server to fetch client data.
 
 ## Project Structure

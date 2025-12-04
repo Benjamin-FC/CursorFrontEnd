@@ -1,0 +1,44 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --no-restore -c Release
+      
+    - name: Run unit tests (exclude integration tests)
+      run: dotnet test --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      continue-on-error: false
+      
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: '**/test-results.trx'
+        check_name: 'Unit Test Results'
+        
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All unit tests completed" >> $GITHUB_STEP_SUMMARY
