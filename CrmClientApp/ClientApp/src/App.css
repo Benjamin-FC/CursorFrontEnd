@@ -243,12 +243,11 @@
 .results-divider {
   height: 1px;
   background: var(--color-border-default, #e5e7eb);
-  margin: 0 32px;
+  margin: 0 32px 24px;
 }
 
 .results-section {
-  padding: 28px 32px;
-  background: var(--color-surface-tertiary, #f7f7f8);
+  padding: 0 32px 28px;
   animation: slideIn 0.3s ease-out;
 }
 
@@ -278,9 +277,8 @@
 }
 
 .clear-button {
-  background: var(--color-surface-background, #ffffff);
-  border: 1px solid var(--color-border-input, #d1d5db);
-  border-radius: 6px;
+  background: transparent;
+  border: none;
   cursor: pointer;
   padding: 6px;
   color: var(--color-text-caption, #6b7280);
@@ -290,20 +288,17 @@
   justify-content: center;
   width: 32px;
   height: 32px;
+  border-radius: 6px;
 }
 
 .clear-button:hover {
   background: var(--color-surface-hover, #f9fafb);
-  border-color: var(--color-border-focused, #1999d6);
   color: var(--color-text-title, #1a1a1a);
   transform: rotate(90deg);
 }
 
 .results-content {
-  background: var(--color-surface-background, #ffffff);
-  border-radius: 8px;
-  border: 1px solid var(--color-border-default, #e5e7eb);
-  padding: 24px;
+  padding: 0;
 }
 
 .data-grid {
@@ -315,16 +310,21 @@
   display: grid;
   grid-template-columns: 200px 1fr;
   gap: 20px;
-  padding: 14px 16px;
-  background: var(--color-surface-tertiary, #f7f7f8);
-  border-radius: 8px;
-  border-left: 3px solid var(--color-brand-primary, #193567);
+  padding: 16px 0;
+  border-bottom: 1px solid var(--color-border-default, #e5e7eb);
   transition: all 0.2s ease;
 }
 
+.data-row:last-child {
+  border-bottom: none;
+}
+
 .data-row:hover {
-  background: var(--color-surface-hover, #e8eaed);
-  transform: translateX(2px);
+  background: var(--color-surface-tertiary, #f7f7f8);
+  margin: 0 -24px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border-bottom: 1px solid transparent;
 }
 
 .data-key {
@@ -344,16 +344,13 @@
 }
 
 .data-text {
-  background: var(--color-surface-tertiary, #f7f7f8);
-  padding: 20px;
-  border-radius: 8px;
+  padding: 0;
   font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.7;
   color: var(--color-text-body, #404855);
   white-space: pre-wrap;
   word-wrap: break-word;
-  border-left: 3px solid var(--color-brand-primary, #193567);
   overflow-x: auto;
 }
 
