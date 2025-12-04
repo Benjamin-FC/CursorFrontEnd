@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext.jsx'
 import './App.css'
 
 function App() {
@@ -8,11 +9,10 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
-  const username = localStorage.getItem('username') || 'User'
+  const { username, logout } = useAuth()
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('username')
+    logout()
     navigate('/login', { replace: true })
   }
 

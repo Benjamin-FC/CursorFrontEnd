@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext.jsx'
 import './Login.css'
 
 function Login() {
@@ -8,6 +9,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -15,15 +17,11 @@ function Login() {
     setError(null)
 
     try {
-      // TODO: Replace with actual authentication API call
-      // For now, simple validation
-      if (username && password) {
-        // Store auth state (in a real app, use proper auth tokens)
-        localStorage.setItem('isAuthenticated', 'true')
-        localStorage.setItem('username', username)
+      const result = login(username, password)
+      if (result.success) {
         navigate('/', { replace: true })
       } else {
-        throw new Error('Please enter both username and password')
+        throw new Error(result.error || 'Login failed')
       }
     } catch (err) {
       setError(err.message || 'Login failed')
