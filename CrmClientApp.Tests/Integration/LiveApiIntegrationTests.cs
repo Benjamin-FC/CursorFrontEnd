@@ -47,7 +47,7 @@ public class LiveApiIntegrationTests : IClassFixture<IntegrationTestFixture>
         token.Length.Should().BeGreaterThan(10); // Tokens are typically longer
         
         // Print token to console
-        Console.WriteLine($"Successfully fetched token: {token}");
+        Console.WriteLine($"Successfully fetched token: {token.Substring(0, Math.Min(10, token.Length))}...");
         Console.WriteLine($"Token length: {token.Length} characters");
     }
 
