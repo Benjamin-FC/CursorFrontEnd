@@ -10,7 +10,9 @@ CrmClientApp/
 │   └── CrmController.cs  # Handles client data requests
 ├── Services/             # Business logic services
 │   ├── ICrmService.cs    # CRM service interface
-│   └── CrmService.cs     # Implementation for calling external CRM server
+│   ├── CrmService.cs     # Implementation for calling external CRM server
+│   ├── ITokenService.cs  # Token service interface
+│   └── TokenService.cs   # Token generation service
 ├── ClientApp/            # React/Vite frontend
 │   ├── src/
 │   │   ├── App.jsx       # Main React component with form
@@ -41,12 +43,37 @@ cd ClientApp
 npm install
 ```
 
-### 3. Configure CRM Server
+### 3. Configure Environment Variables
 
-The backend is configured to connect to `https://www.crmserver.com/`. The service calls the endpoint:
+The external API requires OAuth authentication. Set the following environment variables for OAuth client credentials:
+
+```bash
+export OAUTH_CLIENT_ID="your-client-id"
+export OAUTH_CLIENT_SECRET="your-client-secret"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:OAUTH_CLIENT_ID="your-client-id"
+$env:OAUTH_CLIENT_SECRET="your-client-secret"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set OAUTH_CLIENT_ID=your-client-id
+set OAUTH_CLIENT_SECRET=your-client-secret
+```
+
+### 4. Configure CRM Server and Token Server
+
+The backend is configured to connect to:
+- **Token Server**: `https://www.tokenserver.com/oauth/token` (for OAuth token retrieval)
+- **CRM Server**: `https://www.crmserver.com/` (for client data)
+
+The service calls the endpoint:
 - `GET /api/GetClientData?id={clientId}`
 
-If your CRM server uses a different endpoint structure, update the `CrmService.cs` file accordingly.
+If your servers use different endpoint structures, update the configuration in `appsettings.json` accordingly.
 
 ## Running the Application
 
@@ -121,16 +148,80 @@ The React frontend provides a simple form to:
 
 ### Backend Configuration
 
-- CRM server URL: Configured in `Program.cs` (currently `https://www.crmserver.com/`)
+#### Environment Variables (Required)
+- `OAUTH_CLIENT_ID`: OAuth client ID for token server authentication (required)
+- `OAUTH_CLIENT_SECRET`: OAuth client secret for token server authentication (required)
+
+#### appsettings.json Configuration
+
+The `appsettings.json` file contains the following configuration:
+
+```json
+{
+  "ExternalApi": {
+    "CrmServer": {
+      "BaseUrl": "https://www.crmserver.com/",
+      "TimeoutSeconds": 30
+    },
+    "Token": {
+      "Endpoint": "https://www.tokenserver.com/oauth/token",
+      "GrantType": "client_credentials",
+      "Scope": "",
+      "UseBasicAuth": false,
+      "HeaderName": "Authorization",
+      "HeaderFormat": "Bearer {0}"
+    }
+  }
+}
+```
+
+**Token Configuration Options:**
+- `Endpoint`: OAuth token endpoint URL (required). Default: `https://www.tokenserver.com/oauth/token`
+- `GrantType`: OAuth grant type. Default: `client_credentials`
+- `Scope`: OAuth scope (optional, leave empty if not required)
+- `UseBasicAuth`: Whether to use Basic Authentication header instead of form parameters. Default: `false`
+- `HeaderName`: HTTP header name for the token. Default: `Authorization`
+- `HeaderFormat`: Format string for the token header (use {0} as token placeholder). Default: `Bearer {0}`
+
+#### Other Configuration
+- CRM server URL: Configured in `appsettings.json` under `ExternalApi:CrmServer:BaseUrl`
 - CORS: Configured to allow requests from `http://localhost:5173`
-- Timeout: 30 seconds for CRM server requests
+- Timeout: Configurable in `appsettings.json` under `ExternalApi:CrmServer:TimeoutSeconds` (default: 30 seconds)
 
 ### Frontend Configuration
 
 - API proxy: Configured in `vite.config.js` to proxy `/api` requests to `http://localhost:5000`
 
+## Authentication
+
+The application uses OAuth 2.0 client credentials flow to authenticate with the external CRM API:
+
+1. **Token Retrieval**: On first request (or when token expires), the application requests an OAuth token from the token server (`www.tokenserver.com`) using:
+   - Client ID and Client Secret from environment variables (`OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`)
+   - Grant type from configuration (default: `client_credentials`)
+   - Optional scope from configuration
+
+2. **Token Caching**: OAuth tokens are cached in memory and automatically refreshed 1 minute before expiration to ensure uninterrupted service. The token service uses thread-safe locking to prevent concurrent token requests.
+
+3. **API Requests**: All CRM API requests include the OAuth token in the `Authorization` header as `Bearer {token}`.
+
+### Token Server Requirements
+
+The token server should support OAuth 2.0 client credentials grant type and return a JSON response in the following format:
+
+```json
+{
+  "access_token": "your-access-token",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "optional-scope"
+}
+```
+
 ## Notes
 
-- The CRM server endpoint structure may need to be adjusted based on the actual API structure of `www.crmserver.com`
-- SSL certificate validation: If the CRM server uses a self-signed certificate, you may need to configure certificate validation in `CrmService.cs`
-- Authentication: If the CRM server requires authentication, add the necessary headers or tokens in `CrmService.cs`
+- The CRM server and token server endpoint structures may need to be adjusted based on the actual API structure
+- SSL certificate validation: If the servers use self-signed certificates, you may need to configure certificate validation
+- Token caching: Tokens are refreshed automatically 1 minute before expiration to ensure uninterrupted service
+- Thread-safe: Token service uses semaphore locking to prevent concurrent token requests
+- **Security**: Never commit environment variables (OAuth client ID/secret) to version control. Use secure configuration management in production environments.
