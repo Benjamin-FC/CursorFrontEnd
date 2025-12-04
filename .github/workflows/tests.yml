@@ -11,6 +11,10 @@ jobs:
   test:
     name: Unit Tests Only (Exclude Integration)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     
     steps:
     - name: Checkout code
@@ -195,8 +199,11 @@ PYTHON_SCRIPT
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        files: '**/test-results.trx'
+        files: '**/TestResults.trx'
         check_name: 'Unit Test Results'
+        check_run_annotations: 'all tests'
+        comment_mode: 'off'
+      continue-on-error: true
         
     - name: Test Summary with Statistics
       if: always()
