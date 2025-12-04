@@ -27,13 +27,24 @@ jobs:
     - name: Build solution
       run: dotnet build --no-restore -c Release
       
+    - name: List test projects
+      run: |
+        echo "Checking for test projects..."
+        dotnet sln list
+        echo ""
+        echo "Checking test project..."
+        ls -la CrmClientApp.Tests/ || echo "Test project directory not found"
+        
     - name: Run unit tests only (exclude integration tests)
       id: test
       run: |
         echo "Running unit tests only - Integration tests excluded"
         echo "Test project: CrmClientApp.Tests"
         echo "Filter: Excluding tests with Category=Integration"
+        echo ""
+        echo "Running: dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --filter 'Category!=Integration'"
         dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=detailed" 2>&1 | tee test-output.txt
+        echo ""
         echo "Test command completed with exit code: $?"
       continue-on-error: true
       
