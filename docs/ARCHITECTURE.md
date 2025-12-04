@@ -9,37 +9,100 @@ The CRM Client Data Fetcher is a full-stack web application consisting of:
 
 ## System Architecture
 
-```
-┌─────────────────┐
-│   React Client  │
-│   (Port 5173)   │
-└────────┬────────┘
-         │ HTTP/HTTPS
-         │ /api/*
-         ▼
-┌─────────────────┐
-│  ASP.NET Core   │
-│  Web API        │
-│  (Port 5000)    │
-└────────┬────────┘
-         │
-         ├─────────────────┐
-         │                 │
-         ▼                 ▼
-┌─────────────────┐  ┌─────────────────┐
-│  Token Service  │  │   CRM Service   │
-│  (OAuth)        │  │                 │
-└────────┬────────┘  └────────┬────────┘
-         │                    │
-         │                    │
-         ▼                    ▼
-┌─────────────────┐  ┌─────────────────┐
-│  Token Server   │  │   CRM Server    │
-│  (OAuth)        │  │  (External API) │
-└─────────────────┘  └─────────────────┘
+```mermaid
+graph TB
+    subgraph Frontend["🌐 Frontend Layer"]
+        React[React Client<br/>Port 5173<br/>⚛️ React + Vite]
+    end
+    
+    subgraph Backend["⚙️ Backend Layer"]
+        API[ASP.NET Core Web API<br/>Port 5000<br/>🔷 C# .NET 8.0]
+        
+        subgraph Services["🔧 Services"]
+            TokenSvc[Token Service<br/>🔐 OAuth Management]
+            CrmSvc[CRM Service<br/>📊 Data Retrieval]
+        end
+    end
+    
+    subgraph External["🌍 External Services"]
+        TokenServer[Token Server<br/>🔑 OAuth Provider]
+        CrmServer[CRM Server<br/>📈 External API]
+    end
+    
+    React -->|HTTP/HTTPS<br/>/api/*| API
+    API --> TokenSvc
+    API --> CrmSvc
+    TokenSvc -->|OAuth Token Request| TokenServer
+    TokenServer -->|Access Token| TokenSvc
+    CrmSvc -->|Authenticated Request<br/>Bearer Token| CrmServer
+    CrmServer -->|Client Data| CrmSvc
+    CrmSvc -->|JSON Response| API
+    API -->|JSON Response| React
+    
+    classDef frontend fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef backend fill:#512bd4,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#ff6b6b,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class React frontend
+    class API backend
+    class TokenSvc,CrmSvc service
+    class TokenServer,CrmServer external
 ```
 
 ## Component Overview
+
+### Component Relationships
+
+```mermaid
+graph LR
+    subgraph Frontend["🌐 Frontend"]
+        AppJSX[App.jsx<br/>⚛️ React Component]
+        ViteConfig[Vite Config<br/>⚡ Build Tool]
+    end
+    
+    subgraph Backend["⚙️ Backend"]
+        Program[Program.cs<br/>🚀 Startup]
+        Controller[CrmController<br/>🎮 API Controller]
+        
+        subgraph Services["🔧 Services"]
+            ICrmSvc[ICrmService<br/>📋 Interface]
+            CrmSvc[CrmService<br/>📊 Implementation]
+            ITokenSvc[ITokenService<br/>📋 Interface]
+            TokenSvc[TokenService<br/>🔐 Implementation]
+        end
+        
+        subgraph Config["⚙️ Configuration"]
+            AppSettings[appsettings.json<br/>📝 Config]
+            EnvVars[Environment Variables<br/>🔒 Secrets]
+        end
+    end
+    
+    AppJSX -->|HTTP Request| Controller
+    ViteConfig -->|Proxy /api| Controller
+    Program -->|DI Registration| Controller
+    Program -->|DI Registration| Services
+    Controller -->|Uses| ICrmSvc
+    ICrmSvc -.->|Implemented by| CrmSvc
+    CrmSvc -->|Uses| ITokenSvc
+    ITokenSvc -.->|Implemented by| TokenSvc
+    CrmSvc -->|Reads| AppSettings
+    TokenSvc -->|Reads| AppSettings
+    TokenSvc -->|Reads| EnvVars
+    Program -->|Configures| Config
+    
+    classDef frontend fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef backend fill:#512bd4,stroke:#fff,stroke-width:2px,color:#fff
+    classDef service fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    classDef interface fill:#4ec9b0,stroke:#fff,stroke-width:2px,color:#000
+    classDef config fill:#ffa500,stroke:#fff,stroke-width:2px,color:#000
+    
+    class AppJSX,ViteConfig frontend
+    class Program,Controller backend
+    class CrmSvc,TokenSvc service
+    class ICrmSvc,ITokenSvc interface
+    class AppSettings,EnvVars config
+```
 
 ### Backend Components
 
@@ -103,49 +166,102 @@ The CRM Client Data Fetcher is a full-stack web application consisting of:
 
 ### Client Data Retrieval Flow
 
-1. **User Input**: User enters client ID in React form
-2. **Frontend Request**: React app sends GET request to `/api/Crm/GetClientData?id={clientId}`
-3. **Controller Validation**: `CrmController` validates the client ID parameter
-4. **Token Retrieval**: `CrmService` requests OAuth token from `TokenService`
-5. **Token Service Logic**:
-   - Check if cached token exists and is valid
-   - If not, acquire semaphore lock
-   - Double-check cache (another thread may have refreshed it)
-   - If still invalid, fetch new token from token server
-   - Cache token with expiration time
-6. **CRM Request**: `CrmService` constructs HTTP request with OAuth token in headers
-7. **External API Call**: Request sent to external CRM server
-8. **Response Handling**: Response parsed and returned to controller
-9. **API Response**: Controller returns JSON response to frontend
-10. **UI Update**: React app displays data or error message
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant React as ⚛️ React Frontend<br/>(Port 5173)
+    participant Controller as 🎮 CrmController<br/>(API Endpoint)
+    participant CrmService as 📊 CrmService
+    participant TokenService as 🔐 TokenService
+    participant TokenServer as 🔑 Token Server
+    participant CrmServer as 📈 CRM Server
+    
+    User->>React: Enter client ID
+    React->>Controller: GET /api/Crm/GetClientData?id={clientId}
+    activate Controller
+    
+    Controller->>Controller: Validate client ID
+    alt Invalid client ID
+        Controller-->>React: 400 Bad Request ❌
+        React-->>User: Display error message
+    else Valid client ID
+        Controller->>CrmService: GetClientDataAsync(clientId)
+        activate CrmService
+        
+        CrmService->>TokenService: GetTokenAsync()
+        activate TokenService
+        
+        TokenService->>TokenService: Check token cache
+        alt Token cached and valid
+            TokenService-->>CrmService: Return cached token ✅
+        else Token expired or missing
+            TokenService->>TokenService: Acquire semaphore lock 🔒
+            TokenService->>TokenServer: POST /oauth/token<br/>(client credentials)
+            activate TokenServer
+            TokenServer-->>TokenService: Access token + expires_in
+            deactivate TokenServer
+            TokenService->>TokenService: Cache token<br/>(expires_at = now + 3540s)
+            TokenService->>TokenService: Release semaphore lock 🔓
+            TokenService-->>CrmService: Return token ✅
+        end
+        deactivate TokenService
+        
+        CrmService->>CrmService: Construct HTTP request<br/>with Bearer token header
+        CrmService->>CrmServer: GET /api/GetClientData?id={clientId}<br/>Authorization: Bearer {token}
+        activate CrmServer
+        
+        alt CRM Server Success
+            CrmServer-->>CrmService: 200 OK + Client Data
+            deactivate CrmServer
+            CrmService-->>Controller: Client data string
+            deactivate CrmService
+            Controller-->>React: 200 OK<br/>{ "data": "..." }
+            deactivate Controller
+            React-->>User: Display client data ✅
+        else CRM Server Error
+            CrmServer-->>CrmService: Error response
+            deactivate CrmServer
+            CrmService-->>Controller: HttpRequestException
+            deactivate CrmService
+            Controller-->>React: 503 Service Unavailable ❌
+            deactivate Controller
+            React-->>User: Display error message
+        end
+    end
+```
 
 ## Authentication Flow
 
 ### OAuth 2.0 Client Credentials Flow
 
-```
-┌─────────────┐                    ┌─────────────┐
-│   App       │                    │   Token     │
-│             │                    │   Server    │
-└──────┬──────┘                    └──────┬──────┘
-       │                                   │
-       │ 1. POST /oauth/token              │
-       │    grant_type=client_credentials  │
-       │    client_id=...                  │
-       │    client_secret=...              │
-       │──────────────────────────────────>│
-       │                                   │
-       │ 2. Response:                     │
-       │    {                              │
-       │      "access_token": "...",       │
-       │      "expires_in": 3600           │
-       │    }                              │
-       │<──────────────────────────────────│
-       │                                   │
-       │ 3. Cache token                    │
-       │    (expires_at = now + 3540s)     │
-       │                                   │
-       └───────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant App as 🔷 Application<br/>(TokenService)
+    participant Cache as 💾 Token Cache<br/>(In-Memory)
+    participant Server as 🔑 Token Server<br/>(OAuth Provider)
+    
+    Note over App,Server: OAuth 2.0 Client Credentials Flow
+    
+    App->>Cache: Check cached token
+    alt Token exists and valid (>5 min remaining)
+        Cache-->>App: Return cached token ✅
+    else Token expired or missing
+        App->>App: Acquire semaphore lock 🔒
+        App->>Cache: Double-check cache
+        alt Still invalid
+            App->>Server: POST /oauth/token<br/>grant_type=client_credentials<br/>client_id={id}<br/>client_secret={secret}
+            activate Server
+            Server-->>App: 200 OK<br/>{<br/>  "access_token": "...",<br/>  "token_type": "Bearer",<br/>  "expires_in": 3600<br/>}
+            deactivate Server
+            App->>Cache: Store token<br/>(expires_at = now + 3540s)
+            Cache-->>App: Token cached ✅
+        else Token refreshed by another thread
+            Cache-->>App: Return refreshed token ✅
+        end
+        App->>App: Release semaphore lock 🔓
+    end
+    
+    Note over App,Cache: Token automatically refreshed<br/>1 minute before expiration
 ```
 
 ## Configuration Management
@@ -217,16 +333,77 @@ The `TokenService` implements thread-safe token retrieval using:
 
 ## Deployment Architecture
 
-### Development
-- Backend and frontend run separately
-- Vite dev server proxies API requests
-- Hot module replacement for frontend
+### Development Architecture
 
-### Production
-- Frontend built and served from `wwwroot`
-- Single ASP.NET Core application
-- Static file middleware serves React app
-- Fallback routing for SPA
+```mermaid
+graph TB
+    subgraph Dev["🛠️ Development Environment"]
+        DevReact[React Dev Server<br/>⚛️ Port 5173<br/>Hot Module Replacement]
+        DevAPI[ASP.NET Core API<br/>🔷 Port 5000<br/>Swagger Enabled]
+    end
+    
+    DevReact -->|Proxy /api/*| DevAPI
+    DevAPI -->|Serves API| DevReact
+    
+    classDef dev fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    class DevReact,DevAPI dev
+```
+
+### Production Architecture
+
+```mermaid
+graph TB
+    subgraph Prod["🚀 Production Environment"]
+        LoadBalancer[Load Balancer<br/>⚖️ Nginx/IIS]
+        
+        subgraph AppServer["Application Server"]
+            DotNetApp[ASP.NET Core App<br/>🔷 Single Process]
+            
+            subgraph StaticFiles["Static Files"]
+                ReactBuild[React Build<br/>📦 wwwroot/<br/>Static Assets]
+            end
+            
+            subgraph Services["Services"]
+                TokenSvcProd[Token Service<br/>🔐 OAuth]
+                CrmSvcProd[CRM Service<br/>📊 Data]
+            end
+        end
+        
+        subgraph External["External Services"]
+            TokenServerProd[Token Server<br/>🔑 OAuth Provider]
+            CrmServerProd[CRM Server<br/>📈 External API]
+        end
+    end
+    
+    LoadBalancer --> DotNetApp
+    DotNetApp --> ReactBuild
+    DotNetApp --> TokenSvcProd
+    DotNetApp --> CrmSvcProd
+    TokenSvcProd --> TokenServerProd
+    CrmSvcProd --> CrmServerProd
+    
+    classDef prod fill:#512bd4,stroke:#fff,stroke-width:2px,color:#fff
+    classDef static fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef service fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    classDef external fill:#ff6b6b,stroke:#fff,stroke-width:2px,color:#fff
+    
+    class LoadBalancer,DotNetApp prod
+    class ReactBuild static
+    class TokenSvcProd,CrmSvcProd service
+    class TokenServerProd,CrmServerProd external
+```
+
+### Development vs Production
+
+| Aspect | Development | Production |
+|-------|------------|------------|
+| **Frontend** | Separate Vite dev server (Port 5173) | Built and served from `wwwroot` |
+| **Backend** | ASP.NET Core API (Port 5000) | Single ASP.NET Core application |
+| **API Proxy** | Vite dev server proxies `/api/*` | Same origin, no proxy needed |
+| **Hot Reload** | ✅ Enabled | ❌ Disabled |
+| **Swagger** | ✅ Enabled | ❌ Disabled (optional) |
+| **Static Files** | Served by Vite | Served by ASP.NET Core middleware |
+| **Routing** | Client-side routing via Vite | Fallback to `index.html` for SPA |
 
 ## Scalability Considerations
 
