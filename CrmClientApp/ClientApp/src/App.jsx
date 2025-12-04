@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Input, Card, CardHeader, CardBody, Alert, Badge } from '@benjamin-fc/earth-react'
+import { Button, Input, Card, CardHeader, CardBody, Alert, Badge } from '@frankcrum/earth-react'
 import './App.css'
 
 function App() {
