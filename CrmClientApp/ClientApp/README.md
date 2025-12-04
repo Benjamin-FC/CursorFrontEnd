@@ -44,13 +44,21 @@ graph TD
 ### Prerequisites
 
 - Node.js 16 or higher
-- npm or yarn
+- pnpm (recommended) or npm/yarn
 
 ### Installation
 
+**Using pnpm (recommended):**
+```bash
+pnpm install
+```
+
+**Using npm:**
 ```bash
 npm install
 ```
+
+**Note:** After installation, the `@tailwindcss/postcss` package will be installed automatically. If you encounter PostCSS errors, make sure to run the install command.
 
 ### Running Development Server
 
