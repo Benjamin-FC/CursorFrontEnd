@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@frankcrum/earth': path.resolve(__dirname, 'node_modules/@frankcrum/earth/packages/earth'),
+      '@frankcrum/earth': path.resolve(__dirname, '../../packages/earth-local'),
     },
   },
   server: {
