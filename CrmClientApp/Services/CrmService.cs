@@ -27,8 +27,8 @@ public class CrmService : ICrmService
         {
             _logger.LogInformation("Calling GetClientData for client ID: {ClientId}", clientId);
             
-            // Generate token dynamically
-            var token = _tokenService.GenerateToken();
+            // Get OAuth token dynamically
+            var token = await _tokenService.GetTokenAsync();
             
             // Get token header name from config (default to Authorization)
             var tokenHeaderName = _configuration["ExternalApi:Token:HeaderName"] ?? "Authorization";

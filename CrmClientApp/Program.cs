@@ -19,6 +19,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Register HTTP Client Factory for Token Service
+builder.Services.AddHttpClient();
+
 // Register Token Service
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
@@ -31,18 +34,25 @@ if (string.IsNullOrWhiteSpace(crmServerBaseUrl))
     throw new InvalidOperationException("ExternalApi:CrmServer:BaseUrl configuration is required");
 }
 
-// Validate environment variables for token generation
-var userId = Environment.GetEnvironmentVariable("CRM_USER_ID");
-var password = Environment.GetEnvironmentVariable("CRM_PASSWORD");
-
-if (string.IsNullOrWhiteSpace(userId))
+// Validate OAuth configuration
+var tokenEndpoint = builder.Configuration["ExternalApi:Token:Endpoint"];
+if (string.IsNullOrWhiteSpace(tokenEndpoint))
 {
-    throw new InvalidOperationException("CRM_USER_ID environment variable is required");
+    throw new InvalidOperationException("ExternalApi:Token:Endpoint configuration is required");
 }
 
-if (string.IsNullOrWhiteSpace(password))
+// Validate environment variables for OAuth
+var clientId = Environment.GetEnvironmentVariable("OAUTH_CLIENT_ID");
+var clientSecret = Environment.GetEnvironmentVariable("OAUTH_CLIENT_SECRET");
+
+if (string.IsNullOrWhiteSpace(clientId))
 {
-    throw new InvalidOperationException("CRM_PASSWORD environment variable is required");
+    throw new InvalidOperationException("OAUTH_CLIENT_ID environment variable is required");
+}
+
+if (string.IsNullOrWhiteSpace(clientSecret))
+{
+    throw new InvalidOperationException("OAUTH_CLIENT_SECRET environment variable is required");
 }
 
 builder.Services.AddHttpClient<ICrmService, CrmService>(client =>

@@ -1,5 +1,5 @@
-using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace CrmClientApp.Services;
 
@@ -7,90 +7,143 @@ public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<TokenService> _logger;
-    private readonly string _userId;
-    private readonly string _password;
+    private readonly HttpClient _httpClient;
+    private readonly string _clientId;
+    private readonly string _clientSecret;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    
+    private CachedToken? _cachedToken;
 
-    public TokenService(IConfiguration configuration, ILogger<TokenService> logger)
+    public TokenService(
+        IConfiguration configuration, 
+        ILogger<TokenService> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClientFactory.CreateClient();
         
-        // Read userid and password from environment variables
-        _userId = Environment.GetEnvironmentVariable("CRM_USER_ID") 
-            ?? throw new InvalidOperationException("CRM_USER_ID environment variable is required");
-        _password = Environment.GetEnvironmentVariable("CRM_PASSWORD") 
-            ?? throw new InvalidOperationException("CRM_PASSWORD environment variable is required");
+        // Read client ID and secret from environment variables
+        _clientId = Environment.GetEnvironmentVariable("OAUTH_CLIENT_ID") 
+            ?? throw new InvalidOperationException("OAUTH_CLIENT_ID environment variable is required");
+        _clientSecret = Environment.GetEnvironmentVariable("OAUTH_CLIENT_SECRET") 
+            ?? throw new InvalidOperationException("OAUTH_CLIENT_SECRET environment variable is required");
     }
 
-    public string GenerateToken()
+    public async Task<string> GetTokenAsync()
+    {
+        // Check if we have a valid cached token
+        if (_cachedToken != null && _cachedToken.ExpiresAt > DateTime.UtcNow.AddMinutes(5))
+        {
+            _logger.LogDebug("Using cached OAuth token");
+            return _cachedToken.Token;
+        }
+
+        // Use semaphore to ensure only one token request at a time
+        await _semaphore.WaitAsync();
+        try
+        {
+            // Double-check after acquiring lock (another thread might have refreshed it)
+            if (_cachedToken != null && _cachedToken.ExpiresAt > DateTime.UtcNow.AddMinutes(5))
+            {
+                _logger.LogDebug("Using cached OAuth token (after lock)");
+                return _cachedToken.Token;
+            }
+
+            // Fetch new token from token server
+            return await FetchTokenFromServerAsync();
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private async Task<string> FetchTokenFromServerAsync()
     {
         try
         {
-            // Get token generation config values
-            var tokenAlgorithm = _configuration["ExternalApi:Token:Algorithm"] ?? "SHA256";
-            var tokenSecret = _configuration["ExternalApi:Token:Secret"] 
-                ?? throw new InvalidOperationException("ExternalApi:Token:Secret configuration is required");
-            var tokenExpiryMinutes = _configuration.GetValue<int>("ExternalApi:Token:ExpiryMinutes", 60);
-            
-            // Generate timestamp for token expiry
-            var expiryTime = DateTime.UtcNow.AddMinutes(tokenExpiryMinutes);
-            var timestamp = ((DateTimeOffset)expiryTime).ToUnixTimeSeconds();
-            
-            // Create token payload combining userid, password, secret, and timestamp
-            var payload = $"{_userId}:{_password}:{tokenSecret}:{timestamp}";
-            
-            // Generate token based on algorithm
-            string token;
-            switch (tokenAlgorithm.ToUpperInvariant())
+            var tokenEndpoint = _configuration["ExternalApi:Token:Endpoint"] 
+                ?? throw new InvalidOperationException("ExternalApi:Token:Endpoint configuration is required");
+            var scope = _configuration["ExternalApi:Token:Scope"] ?? "";
+            var grantType = _configuration["ExternalApi:Token:GrantType"] ?? "client_credentials";
+
+            _logger.LogInformation("Fetching OAuth token from token server");
+
+            // Prepare OAuth token request
+            var requestBody = new List<KeyValuePair<string, string>>
             {
-                case "SHA256":
-                    token = GenerateSha256Token(payload);
-                    break;
-                case "SHA512":
-                    token = GenerateSha512Token(payload);
-                    break;
-                case "MD5":
-                    token = GenerateMd5Token(payload);
-                    break;
-                default:
-                    _logger.LogWarning("Unknown token algorithm: {Algorithm}, defaulting to SHA256", tokenAlgorithm);
-                    token = GenerateSha256Token(payload);
-                    break;
+                new("grant_type", grantType),
+                new("client_id", _clientId),
+                new("client_secret", _clientSecret)
+            };
+
+            if (!string.IsNullOrWhiteSpace(scope))
+            {
+                requestBody.Add(new KeyValuePair<string, string>("scope", scope));
             }
-            
-            // Optionally include timestamp in token format: {hash}:{timestamp}
-            var formattedToken = _configuration.GetValue<bool>("ExternalApi:Token:IncludeTimestamp", true)
-                ? $"{token}:{timestamp}"
-                : token;
-            
-            _logger.LogDebug("Generated token for user: {UserId}", _userId);
-            return formattedToken;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, tokenEndpoint)
+            {
+                Content = new FormUrlEncodedContent(requestBody)
+            };
+
+            // Add basic auth header if configured
+            var useBasicAuth = _configuration.GetValue<bool>("ExternalApi:Token:UseBasicAuth", false);
+            if (useBasicAuth)
+            {
+                var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+            }
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (tokenResponse == null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
+            {
+                throw new InvalidOperationException("Invalid token response from token server");
+            }
+
+            // Cache the token
+            var expiresIn = tokenResponse.ExpiresIn ?? 3600; // Default to 1 hour if not specified
+            _cachedToken = new CachedToken
+            {
+                Token = tokenResponse.AccessToken,
+                ExpiresAt = DateTime.UtcNow.AddSeconds(expiresIn - 60) // Refresh 1 minute before expiry
+            };
+
+            _logger.LogInformation("Successfully obtained OAuth token, expires in {ExpiresIn} seconds", expiresIn);
+            return _cachedToken.Token;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Error fetching OAuth token from token server");
+            throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating token");
+            _logger.LogError(ex, "Unexpected error fetching OAuth token");
             throw;
         }
     }
 
-    private string GenerateSha256Token(string payload)
+    private class CachedToken
     {
-        using var sha256 = SHA256.Create();
-        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(payload));
-        return Convert.ToBase64String(hashBytes);
+        public string Token { get; set; } = string.Empty;
+        public DateTime ExpiresAt { get; set; }
     }
 
-    private string GenerateSha512Token(string payload)
+    private class TokenResponse
     {
-        using var sha512 = SHA512.Create();
-        var hashBytes = sha512.ComputeHash(Encoding.UTF8.GetBytes(payload));
-        return Convert.ToBase64String(hashBytes);
-    }
-
-    private string GenerateMd5Token(string payload)
-    {
-        using var md5 = MD5.Create();
-        var hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(payload));
-        return Convert.ToBase64String(hashBytes);
+        public string? AccessToken { get; set; }
+        public string? TokenType { get; set; }
+        public int? ExpiresIn { get; set; }
+        public string? Scope { get; set; }
     }
 }
