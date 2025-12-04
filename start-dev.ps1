@@ -49,22 +49,35 @@ if (-not (Test-Path $frontendPath)) {
     exit 1
 }
 
-# Check for port conflicts
+# Check for port conflicts and kill processes if needed
 $backendPort = 5000
 $frontendPort = 5173
 
-function Test-PortInUse {
+function Stop-ProcessOnPort {
     param([int]$Port)
+    
     $connections = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -eq $Port }
-    return $connections.Count -gt 0
+    
+    if ($connections) {
+        foreach ($conn in $connections) {
+            $process = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue
+            if ($process) {
+                Write-Host "Killing process '$($process.ProcessName)' (PID: $($process.Id)) on port $Port..." -ForegroundColor Yellow
+                Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+                Start-Sleep -Milliseconds 500
+            }
+        }
+        return $true
+    }
+    return $false
 }
 
-if (Test-PortInUse -Port $backendPort) {
-    Write-Host "Warning: Port $backendPort is already in use. Backend may fail to start." -ForegroundColor Yellow
+if (Stop-ProcessOnPort -Port $backendPort) {
+    Write-Host "Freed port $backendPort" -ForegroundColor Green
 }
 
-if (Test-PortInUse -Port $frontendPort) {
-    Write-Host "Warning: Port $frontendPort is already in use. Frontend may fail to start." -ForegroundColor Yellow
+if (Stop-ProcessOnPort -Port $frontendPort) {
+    Write-Host "Freed port $frontendPort" -ForegroundColor Green
 }
 
 Write-Host "Starting backend in new window..." -ForegroundColor Yellow
