@@ -85,7 +85,7 @@ jobs:
             SKIPPED=$(xmllint --xpath "string(//Counters/@notExecuted)" "$TRX_FILE" 2>/dev/null || echo "0")
           elif command -v python3 &> /dev/null; then
             echo "Using python to parse TRX file"
-            python3 << 'PYTHON_SCRIPT'
+            PYTHON_OUTPUT=$(python3 -c "
 import xml.etree.ElementTree as ET
 import sys
 try:
@@ -94,46 +94,18 @@ try:
     ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
     counters = root.find('.//Counters', ns)
     if counters is not None:
-        total = counters.get('total', '0')
-        passed = counters.get('passed', '0')
-        failed = counters.get('failed', '0')
-        executed = counters.get('executed', '0')
-        skipped = counters.get('notExecuted', '0')
-        print(f"TOTAL={total}")
-        print(f"PASSED={passed}")
-        print(f"FAILED={failed}")
-        print(f"EXECUTED={executed}")
-        print(f"SKIPPED={skipped}")
+        print('{} {} {} {} {}'.format(
+            counters.get('total', '0'),
+            counters.get('passed', '0'),
+            counters.get('failed', '0'),
+            counters.get('executed', '0'),
+            counters.get('notExecuted', '0')
+        ))
     else:
-        print("TOTAL=0")
-        print("PASSED=0")
-        print("FAILED=0")
-        print("EXECUTED=0")
-        print("SKIPPED=0")
+        print('0 0 0 0 0')
 except Exception as e:
-    print(f"TOTAL=0", file=sys.stderr)
-    print(f"PASSED=0", file=sys.stderr)
-    print(f"FAILED=0", file=sys.stderr)
-    print(f"EXECUTED=0", file=sys.stderr)
-    print(f"SKIPPED=0", file=sys.stderr)
-PYTHON_SCRIPT
-            # Parse python output
-            PYTHON_OUTPUT=$(python3 << 'PYTHON_SCRIPT'
-import xml.etree.ElementTree as ET
-import sys
-try:
-    tree = ET.parse('$TRX_FILE')
-    root = tree.getroot()
-    ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
-    counters = root.find('.//Counters', ns)
-    if counters is not None:
-        print(f"{counters.get('total', '0')} {counters.get('passed', '0')} {counters.get('failed', '0')} {counters.get('executed', '0')} {counters.get('notExecuted', '0')}")
-    else:
-        print("0 0 0 0 0")
-except:
-    print("0 0 0 0 0")
-PYTHON_SCRIPT
-            )
+    print('0 0 0 0 0', file=sys.stderr)
+" 2>/dev/null || echo "0 0 0 0 0")
             TOTAL=$(echo "$PYTHON_OUTPUT" | awk '{print $1}')
             PASSED=$(echo "$PYTHON_OUTPUT" | awk '{print $2}')
             FAILED=$(echo "$PYTHON_OUTPUT" | awk '{print $3}')
