@@ -31,7 +31,10 @@ jobs:
       id: test
       run: |
         echo "Running unit tests only - Integration tests excluded"
-        dotnet test --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=normal" 2>&1 | tee test-output.txt
+        echo "Test project: CrmClientApp.Tests"
+        echo "Filter: Excluding tests with Category=Integration"
+        dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=detailed" 2>&1 | tee test-output.txt
+        echo "Test command completed with exit code: $?"
       continue-on-error: true
       
     - name: Extract test statistics
