@@ -218,6 +218,14 @@ The token server should support OAuth 2.0 client credentials grant type and retu
 }
 ```
 
+## Additional Documentation
+
+For more detailed documentation, see the [docs](docs/) folder:
+
+- **[API Documentation](docs/API.md)** - Complete API reference with examples
+- **[Architecture Documentation](docs/ARCHITECTURE.md)** - System architecture and design details
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Deployment instructions for various platforms
+
 ## Notes
 
 - The CRM server and token server endpoint structures may need to be adjusted based on the actual API structure
