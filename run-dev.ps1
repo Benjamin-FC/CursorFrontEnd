@@ -81,7 +81,7 @@ Write-Host 'Backend starting...' -ForegroundColor Green
 dotnet run
 "@
 
-Start-Process pwsh -ArgumentList "-NoExit", "-Command", $backendScript
+$backendProcess = Start-Process pwsh -ArgumentList "-NoExit", "-Command", $backendScript -PassThru
 
 # Wait a bit for backend to start
 Start-Sleep -Seconds 3
@@ -94,4 +94,9 @@ try {
 }
 finally {
     Pop-Location
+    # Kill the backend process when frontend exits
+    if ($backendProcess -and !$backendProcess.HasExited) {
+        Write-Host "`nStopping backend process..." -ForegroundColor Yellow
+        Stop-Process -Id $backendProcess.Id -Force -ErrorAction SilentlyContinue
+    }
 }
