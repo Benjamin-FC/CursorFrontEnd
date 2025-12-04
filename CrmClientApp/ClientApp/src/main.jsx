@@ -6,6 +6,11 @@ import App from './App.jsx'
 import Login from './Login.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
 
+// Clear any existing authentication state on app start
+// This ensures the app always starts in a logged-out state
+localStorage.removeItem('isAuthenticated')
+localStorage.removeItem('username')
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

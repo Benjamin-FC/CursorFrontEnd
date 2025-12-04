@@ -13,7 +13,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated')
     localStorage.removeItem('username')
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
   const handleSubmit = async (e) => {
