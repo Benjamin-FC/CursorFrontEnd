@@ -11,7 +11,13 @@ using Xunit;
 
 namespace CrmClientApp.Tests.Services;
 
-public class TokenServiceTests
+[CollectionDefinition("TokenService Tests", DisableParallelization = true)]
+public class TokenServiceTestCollection
+{
+}
+
+[Collection("TokenService Tests")]
+public class TokenServiceTests : IDisposable
 {
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<ILogger<TokenService>> _mockLogger;
@@ -45,29 +51,47 @@ public class TokenServiceTests
     [Fact]
     public void Constructor_ShouldThrow_WhenClientIdIsMissing()
     {
-        // Arrange
+        // Arrange - Clear any previously set environment variables
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "secret");
-
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
         
-        exception.Message.Should().Contain("OAUTH_CLIENT_ID");
+        try
+        {
+            // Act & Assert
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
+            
+            exception.Message.Should().Contain("OAUTH_CLIENT_ID");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
+            Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+        }
     }
 
     [Fact]
     public void Constructor_ShouldThrow_WhenClientSecretIsMissing()
     {
-        // Arrange
+        // Arrange - Clear any previously set environment variables
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "client-id");
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
 
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
-        
-        exception.Message.Should().Contain("OAUTH_CLIENT_SECRET");
+        try
+        {
+            // Act & Assert
+            var exception = Assert.Throws<InvalidOperationException>(() =>
+                new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object));
+            
+            exception.Message.Should().Contain("OAUTH_CLIENT_SECRET");
+        }
+        finally
+        {
+            // Cleanup
+            Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
+            Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
+        }
     }
 
     [Fact]
@@ -77,15 +101,7 @@ public class TokenServiceTests
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
 
-        var tokenResponse = new
-        {
-            access_token = "test-access-token-12345",
-            token_type = "Bearer",
-            expires_in = 3600,
-            scope = "read write"
-        };
-
-        var responseContent = JsonSerializer.Serialize(tokenResponse);
+        var responseContent = @"{""access_token"":""test-access-token-12345"",""token_type"":""Bearer"",""expires_in"":3600,""scope"":""read write""}";
         
         _mockHttpMessageHandler
             .Protected()
@@ -115,14 +131,7 @@ public class TokenServiceTests
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
 
-        var tokenResponse = new
-        {
-            access_token = "cached-token",
-            token_type = "Bearer",
-            expires_in = 3600
-        };
-
-        var responseContent = JsonSerializer.Serialize(tokenResponse);
+        var responseContent = @"{""access_token"":""cached-token"",""token_type"":""Bearer"",""expires_in"":3600}";
         
         var callCount = 0;
         _mockHttpMessageHandler
@@ -160,13 +169,7 @@ public class TokenServiceTests
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
 
-        var tokenResponse = new
-        {
-            access_token = "test-token",
-            expires_in = 3600
-        };
-
-        var responseContent = JsonSerializer.Serialize(tokenResponse);
+        var responseContent = @"{""access_token"":""test-token"",""expires_in"":3600}";
         
         HttpRequestMessage? capturedRequest = null;
         _mockHttpMessageHandler
@@ -213,13 +216,7 @@ public class TokenServiceTests
             .AddInMemoryCollection(inMemorySettings)
             .Build();
 
-        var tokenResponse = new
-        {
-            access_token = "test-token",
-            expires_in = 3600
-        };
-
-        var responseContent = JsonSerializer.Serialize(tokenResponse);
+        var responseContent = @"{""access_token"":""test-token-basic"",""expires_in"":3600}";
         
         HttpRequestMessage? capturedRequest = null;
         _mockHttpMessageHandler
@@ -310,17 +307,8 @@ public class TokenServiceTests
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", "test-secret");
 
-        var tokenResponse1 = new
-        {
-            access_token = "first-token",
-            expires_in = 1 // Very short expiry
-        };
-
-        var tokenResponse2 = new
-        {
-            access_token = "refreshed-token",
-            expires_in = 3600
-        };
+        var tokenResponse1Content = @"{""access_token"":""first-token"",""expires_in"":1}";
+        var tokenResponse2Content = @"{""access_token"":""refreshed-token"",""expires_in"":3600}";
 
         var callCount = 0;
         _mockHttpMessageHandler
@@ -333,8 +321,8 @@ public class TokenServiceTests
             {
                 callCount++;
                 var response = callCount == 1 
-                    ? JsonSerializer.Serialize(tokenResponse1)
-                    : JsonSerializer.Serialize(tokenResponse2);
+                    ? tokenResponse1Content
+                    : tokenResponse2Content;
                 
                 return new HttpResponseMessage
                 {
@@ -358,5 +346,12 @@ public class TokenServiceTests
         token1.Should().Be("first-token");
         token2.Should().Be("refreshed-token");
         callCount.Should().Be(2); // Should call twice
+    }
+    
+    public void Dispose()
+    {
+        // Clean up environment variables after each test
+        Environment.SetEnvironmentVariable("OAUTH_CLIENT_ID", null);
+        Environment.SetEnvironmentVariable("OAUTH_CLIENT_SECRET", null);
     }
 }

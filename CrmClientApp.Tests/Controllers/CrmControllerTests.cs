@@ -37,8 +37,11 @@ public class CrmControllerTests
         var okResult = result as OkObjectResult;
         okResult!.Value.Should().NotBeNull();
         
-        var value = okResult.Value as dynamic;
-        value!.data.Should().Be(expectedData);
+        // Use reflection to access the anonymous type property
+        var valueType = okResult.Value!.GetType();
+        var dataProperty = valueType.GetProperty("data");
+        var dataValue = dataProperty?.GetValue(okResult.Value) as string;
+        dataValue.Should().Be(expectedData);
     }
 
     [Fact]
