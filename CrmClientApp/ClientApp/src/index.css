@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@frankcrum/earth";
+@import "@frankcrum/earth/dist/index.css";
 
 /* Custom styles can be added below */
 
