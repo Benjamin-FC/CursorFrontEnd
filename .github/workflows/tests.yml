@@ -85,27 +85,7 @@ jobs:
             SKIPPED=$(xmllint --xpath "string(//Counters/@notExecuted)" "$TRX_FILE" 2>/dev/null || echo "0")
           elif command -v python3 &> /dev/null; then
             echo "Using python to parse TRX file"
-            python3 <<EOF > /tmp/trx_stats.txt
-import xml.etree.ElementTree as ET
-import sys
-try:
-    tree = ET.parse('$TRX_FILE')
-    root = tree.getroot()
-    ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
-    counters = root.find('.//Counters', ns)
-    if counters is not None:
-        print('{} {} {} {} {}'.format(
-            counters.get('total', '0'),
-            counters.get('passed', '0'),
-            counters.get('failed', '0'),
-            counters.get('executed', '0'),
-            counters.get('notExecuted', '0')
-        ))
-    else:
-        print('0 0 0 0 0')
-except:
-    print('0 0 0 0 0')
-EOF
+            python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('$TRX_FILE'); root = tree.getroot(); ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}; counters = root.find('.//Counters', ns); result = '0 0 0 0 0' if counters is None else '{} {} {} {} {}'.format(counters.get('total', '0'), counters.get('passed', '0'), counters.get('failed', '0'), counters.get('executed', '0'), counters.get('notExecuted', '0')); print(result)" > /tmp/trx_stats.txt 2>/dev/null || echo "0 0 0 0 0" > /tmp/trx_stats.txt
             PYTHON_OUTPUT=$(cat /tmp/trx_stats.txt 2>/dev/null || echo "0 0 0 0 0")
             TOTAL=$(echo "$PYTHON_OUTPUT" | awk '{print $1}')
             PASSED=$(echo "$PYTHON_OUTPUT" | awk '{print $2}')
