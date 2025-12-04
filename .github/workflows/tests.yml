@@ -42,96 +42,143 @@ jobs:
         echo "Test project: CrmClientApp.Tests"
         echo "Filter: Excluding tests with Category=Integration"
         echo ""
-        echo "Running: dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --filter 'Category!=Integration'"
-        dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=detailed" 2>&1 | tee test-output.txt
+        dotnet test CrmClientApp.Tests/CrmClientApp.Tests.csproj --no-build -c Release --filter "Category!=Integration" --verbosity normal --logger "trx;LogFileName=TestResults.trx" --logger "console;verbosity=normal" 2>&1 | tee test-output.txt
+        TEST_EXIT_CODE=${PIPESTATUS[0]}
         echo ""
-        echo "Test command completed with exit code: $?"
+        echo "Test command exit code: $TEST_EXIT_CODE"
+        echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
       continue-on-error: true
       
-    - name: Extract test statistics
+    - name: Extract test statistics from TRX file
       id: stats
       if: always()
       run: |
-        echo "=== Parsing test statistics ==="
-        echo "Checking test output file..."
-        ls -la test-output.txt || echo "test-output.txt not found"
-        echo ""
-        echo "Last 50 lines of test output:"
-        tail -50 test-output.txt || echo "Could not read test output"
-        echo ""
+        echo "=== Extracting test statistics ==="
         
-        # Try to find TRX file first (most reliable)
-        TRX_FILE=$(find . -name "test-results.trx" -o -name "*.trx" | head -1)
-        if [ -n "$TRX_FILE" ] && [ -f "$TRX_FILE" ]; then
-          echo "Found TRX file: $TRX_FILE"
-          # Parse from TRX XML file
-          TOTAL=$(grep -oE 'tests="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
-          PASSED=$(grep -oE 'passed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
-          FAILED=$(grep -oE 'failed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
-          EXECUTED=$(grep -oE 'executed="(\d+)"' "$TRX_FILE" | grep -oE '\d+' | head -1 || echo "0")
+        # Find TRX file
+        TRX_FILE=$(find . -type f -name "TestResults.trx" -o -name "test-results.trx" -o -name "*.trx" | head -1)
+        
+        if [ -z "$TRX_FILE" ] || [ ! -f "$TRX_FILE" ]; then
+          echo "❌ TRX file not found. Searching..."
+          find . -name "*.trx" -type f
+          echo ""
+          echo "Last 30 lines of test output for debugging:"
+          tail -30 test-output.txt
+          echo "0" > total.txt
+          echo "0" > passed.txt
+          echo "0" > failed.txt
+          echo "0" > skipped.txt
+        else
+          echo "✅ Found TRX file: $TRX_FILE"
           
-          # If executed is set but total is not, use executed
+          # Use xmllint or python to parse XML properly, fallback to grep
+          if command -v xmllint &> /dev/null; then
+            echo "Using xmllint to parse TRX file"
+            TOTAL=$(xmllint --xpath "string(//Counters/@total)" "$TRX_FILE" 2>/dev/null || echo "0")
+            PASSED=$(xmllint --xpath "string(//Counters/@passed)" "$TRX_FILE" 2>/dev/null || echo "0")
+            FAILED=$(xmllint --xpath "string(//Counters/@failed)" "$TRX_FILE" 2>/dev/null || echo "0")
+            EXECUTED=$(xmllint --xpath "string(//Counters/@executed)" "$TRX_FILE" 2>/dev/null || echo "0")
+            SKIPPED=$(xmllint --xpath "string(//Counters/@notExecuted)" "$TRX_FILE" 2>/dev/null || echo "0")
+          elif command -v python3 &> /dev/null; then
+            echo "Using python to parse TRX file"
+            python3 << 'PYTHON_SCRIPT'
+import xml.etree.ElementTree as ET
+import sys
+try:
+    tree = ET.parse('$TRX_FILE')
+    root = tree.getroot()
+    ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+    counters = root.find('.//Counters', ns)
+    if counters is not None:
+        total = counters.get('total', '0')
+        passed = counters.get('passed', '0')
+        failed = counters.get('failed', '0')
+        executed = counters.get('executed', '0')
+        skipped = counters.get('notExecuted', '0')
+        print(f"TOTAL={total}")
+        print(f"PASSED={passed}")
+        print(f"FAILED={failed}")
+        print(f"EXECUTED={executed}")
+        print(f"SKIPPED={skipped}")
+    else:
+        print("TOTAL=0")
+        print("PASSED=0")
+        print("FAILED=0")
+        print("EXECUTED=0")
+        print("SKIPPED=0")
+except Exception as e:
+    print(f"TOTAL=0", file=sys.stderr)
+    print(f"PASSED=0", file=sys.stderr)
+    print(f"FAILED=0", file=sys.stderr)
+    print(f"EXECUTED=0", file=sys.stderr)
+    print(f"SKIPPED=0", file=sys.stderr)
+PYTHON_SCRIPT
+            # Parse python output
+            PYTHON_OUTPUT=$(python3 << 'PYTHON_SCRIPT'
+import xml.etree.ElementTree as ET
+import sys
+try:
+    tree = ET.parse('$TRX_FILE')
+    root = tree.getroot()
+    ns = {'': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+    counters = root.find('.//Counters', ns)
+    if counters is not None:
+        print(f"{counters.get('total', '0')} {counters.get('passed', '0')} {counters.get('failed', '0')} {counters.get('executed', '0')} {counters.get('notExecuted', '0')}")
+    else:
+        print("0 0 0 0 0")
+except:
+    print("0 0 0 0 0")
+PYTHON_SCRIPT
+            )
+            TOTAL=$(echo "$PYTHON_OUTPUT" | awk '{print $1}')
+            PASSED=$(echo "$PYTHON_OUTPUT" | awk '{print $2}')
+            FAILED=$(echo "$PYTHON_OUTPUT" | awk '{print $3}')
+            EXECUTED=$(echo "$PYTHON_OUTPUT" | awk '{print $4}')
+            SKIPPED=$(echo "$PYTHON_OUTPUT" | awk '{print $5}')
+          else
+            echo "Using grep to parse TRX file (fallback)"
+            # Fallback: grep for Counters element
+            TOTAL=$(grep -oP 'total="\K\d+' "$TRX_FILE" | head -1 || echo "0")
+            PASSED=$(grep -oP 'passed="\K\d+' "$TRX_FILE" | head -1 || echo "0")
+            FAILED=$(grep -oP 'failed="\K\d+' "$TRX_FILE" | head -1 || echo "0")
+            EXECUTED=$(grep -oP 'executed="\K\d+' "$TRX_FILE" | head -1 || echo "0")
+            SKIPPED=$(grep -oP 'notExecuted="\K\d+' "$TRX_FILE" | head -1 || echo "0")
+          fi
+          
+          # Use executed if total is 0
           if [ "$TOTAL" = "0" ] && [ "$EXECUTED" != "0" ]; then
             TOTAL=$EXECUTED
           fi
           
-          echo "Parsed from TRX: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED"
+          echo "Parsed from TRX:"
+          echo "  Total: $TOTAL"
+          echo "  Passed: $PASSED"
+          echo "  Failed: $FAILED"
+          echo "  Executed: $EXECUTED"
+          echo "  Skipped: $SKIPPED"
         fi
         
-        # If TRX parsing didn't work, try console output patterns
+        # Fallback to console output if TRX parsing failed
         if [ "$TOTAL" = "0" ] || [ -z "$TOTAL" ]; then
-          echo "Parsing from console output..."
-          
-          # Pattern 1: "Total tests: X"
-          TOTAL=$(grep -iE "Total tests?:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-          
-          # Pattern 2: "Passed! - Failed: X, Passed: Y"
-          if [ "$PASSED" = "0" ] || [ -z "$PASSED" ]; then
-            PASSED=$(grep -iE "Passed!?\s*-\s+Failed:\s+\d+,\s+Passed:\s+(\d+)" test-output.txt | grep -oE "\d+" | tail -1 || echo "0")
+          echo ""
+          echo "⚠️ TRX parsing returned 0, trying console output..."
+          # Look for summary line in console output
+          SUMMARY=$(grep -iE "Test Run (Successful|Failed).*Total tests?:\s*\d+" test-output.txt | tail -1)
+          if [ -n "$SUMMARY" ]; then
+            TOTAL=$(echo "$SUMMARY" | grep -oP "Total tests?:\s*\K\d+" | head -1 || echo "0")
+            PASSED=$(echo "$SUMMARY" | grep -oP "Passed:\s*\K\d+" | head -1 || echo "0")
+            FAILED=$(echo "$SUMMARY" | grep -oP "Failed:\s*\K\d+" | head -1 || echo "0")
+            echo "Parsed from console summary: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED"
           fi
-          
-          # Pattern 3: "Passed: X"
-          if [ "$PASSED" = "0" ] || [ -z "$PASSED" ]; then
-            PASSED=$(grep -iE "Passed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-          fi
-          
-          # Pattern 4: "Failed: X"
-          if [ "$FAILED" = "0" ] || [ -z "$FAILED" ]; then
-            FAILED=$(grep -iE "Failed:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-          fi
-          
-          # Pattern 5: "Skipped: X"
-          SKIPPED=$(grep -iE "Skipped:\s*(\d+)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-          
-          # Pattern 6: Summary line like "Test Run Successful. Total tests: X, Passed: Y, Failed: Z"
-          if [ "$TOTAL" = "0" ]; then
-            SUMMARY_LINE=$(grep -iE "Test Run.*Total tests?:\s*(\d+)" test-output.txt | tail -1)
-            if [ -n "$SUMMARY_LINE" ]; then
-              TOTAL=$(echo "$SUMMARY_LINE" | grep -oE "Total tests?:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
-              PASSED=$(echo "$SUMMARY_LINE" | grep -oE "Passed:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
-              FAILED=$(echo "$SUMMARY_LINE" | grep -oE "Failed:\s*(\d+)" | grep -oE "\d+" | head -1 || echo "0")
-            fi
-          fi
-          
-          # Pattern 7: X test(s) format
-          if [ "$TOTAL" = "0" ]; then
-            TOTAL=$(grep -iE "(\d+)\s+test\(s\)" test-output.txt | grep -oE "\d+" | head -1 || echo "0")
-          fi
-          
-          echo "Parsed from console: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED"
         fi
         
-        # Calculate total if we have passed and failed
-        if [ "$TOTAL" = "0" ] && [ "$PASSED" != "0" ] || [ "$FAILED" != "0" ]; then
-          TOTAL=$((PASSED + FAILED + SKIPPED))
-        fi
-        
-        # Set defaults
+        # Ensure we have valid numbers
         TOTAL=${TOTAL:-0}
         PASSED=${PASSED:-0}
         FAILED=${FAILED:-0}
         SKIPPED=${SKIPPED:-0}
         
+        # Output for GitHub Actions
         echo "total=$TOTAL" >> $GITHUB_OUTPUT
         echo "passed=$PASSED" >> $GITHUB_OUTPUT
         echo "failed=$FAILED" >> $GITHUB_OUTPUT
