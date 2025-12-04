@@ -20,10 +20,18 @@ builder.Services.AddCors(options =>
 });
 
 // Register CRM service
+var crmServerBaseUrl = builder.Configuration["ExternalApi:CrmServer:BaseUrl"];
+var timeoutSeconds = builder.Configuration.GetValue<int>("ExternalApi:CrmServer:TimeoutSeconds", 30);
+
+if (string.IsNullOrWhiteSpace(crmServerBaseUrl))
+{
+    throw new InvalidOperationException("ExternalApi:CrmServer:BaseUrl configuration is required");
+}
+
 builder.Services.AddHttpClient<ICrmService, CrmService>(client =>
 {
-    client.BaseAddress = new Uri("https://www.crmserver.com/");
-    client.Timeout = TimeSpan.FromSeconds(30);
+    client.BaseAddress = new Uri(crmServerBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 });
 
 var app = builder.Build();
