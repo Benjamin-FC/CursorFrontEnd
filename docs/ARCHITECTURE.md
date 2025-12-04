@@ -212,7 +212,6 @@ sequenceDiagram
         
         alt CRM Server Success
             CrmServer-->>CrmService: 200 OK + Client Data
-            deactivate CrmServer
             CrmService-->>Controller: Client data string
             deactivate CrmService
             Controller-->>React: 200 OK<br/>{ "data": "..." }
@@ -220,13 +219,13 @@ sequenceDiagram
             React-->>User: Display client data ✅
         else CRM Server Error
             CrmServer-->>CrmService: Error response
-            deactivate CrmServer
             CrmService-->>Controller: HttpRequestException
             deactivate CrmService
             Controller-->>React: 503 Service Unavailable ❌
             deactivate Controller
             React-->>User: Display error message
         end
+        deactivate CrmServer
     end
 ```
 
