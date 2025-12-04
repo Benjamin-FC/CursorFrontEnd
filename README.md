@@ -4,21 +4,44 @@ A C# ASP.NET Core Web API backend with a React/Vite frontend that connects to an
 
 ## Project Structure
 
-```
-CrmClientApp/
-├── Controllers/          # API controllers
-│   └── CrmController.cs  # Handles client data requests
-├── Services/             # Business logic services
-│   ├── ICrmService.cs    # CRM service interface
-│   ├── CrmService.cs     # Implementation for calling external CRM server
-│   ├── ITokenService.cs  # Token service interface
-│   └── TokenService.cs   # Token generation service
-├── ClientApp/            # React/Vite frontend
-│   ├── src/
-│   │   ├── App.jsx       # Main React component with form
-│   │   └── App.css       # Styling
-│   └── vite.config.js    # Vite configuration with proxy
-└── Program.cs            # Application entry point
+```mermaid
+graph TD
+    Root[CrmClientApp<br/>📦 Root Project]
+    
+    Root --> Controllers[Controllers/<br/>🎮 API Controllers]
+    Root --> Services[Services/<br/>🔧 Business Logic]
+    Root --> ClientApp[ClientApp/<br/>⚛️ React Frontend]
+    Root --> Program[Program.cs<br/>🚀 Entry Point]
+    Root --> Config[appsettings.json<br/>⚙️ Configuration]
+    
+    Controllers --> CrmController[CrmController.cs<br/>📡 Handles client data requests]
+    
+    Services --> ICrmService[ICrmService.cs<br/>📋 CRM service interface]
+    Services --> CrmService[CrmService.cs<br/>📊 Calls external CRM server]
+    Services --> ITokenService[ITokenService.cs<br/>📋 Token service interface]
+    Services --> TokenService[TokenService.cs<br/>🔐 OAuth token generation]
+    
+    ClientApp --> Src[src/<br/>📝 Source Files]
+    ClientApp --> Public[public/<br/>🌐 Static Assets]
+    ClientApp --> ViteConfig[vite.config.js<br/>⚡ Vite configuration]
+    ClientApp --> PackageJson[package.json<br/>📦 Dependencies]
+    
+    Src --> AppJSX[App.jsx<br/>⚛️ Main React component]
+    Src --> AppCSS[App.css<br/>🎨 Component styles]
+    Src --> MainJSX[main.jsx<br/>🚀 Application entry]
+    Src --> IndexCSS[index.css<br/>🎨 Global styles]
+    
+    classDef root fill:#512bd4,stroke:#fff,stroke-width:3px,color:#fff
+    classDef backend fill:#007acc,stroke:#fff,stroke-width:2px,color:#fff
+    classDef frontend fill:#61dafb,stroke:#20232a,stroke-width:2px,color:#000
+    classDef config fill:#ffa500,stroke:#fff,stroke-width:2px,color:#000
+    classDef file fill:#4ec9b0,stroke:#fff,stroke-width:2px,color:#000
+    
+    class Root root
+    class Controllers,Services,Program backend
+    class ClientApp,Src,Public frontend
+    class Config,ViteConfig,PackageJson config
+    class CrmController,ICrmService,CrmService,ITokenService,TokenService,AppJSX,AppCSS,MainJSX,IndexCSS file
 ```
 
 ## Prerequisites
