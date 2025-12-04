@@ -69,6 +69,13 @@ Write-Host "Starting backend in new window..." -ForegroundColor Yellow
 $backendScript = @"
 `$env:ASPNETCORE_ENVIRONMENT = 'Development'
 `$env:ASPNETCORE_URLS = 'http://localhost:5000'
+`$env:CRM_BASEURL = '$env:CRM_BASEURL'
+`$env:CRM_TOKEN_URL = '$env:CRM_TOKEN_URL'
+`$env:CRM_CLIENT_ID = '$env:CRM_CLIENT_ID'
+`$env:CRM_CLIENT_SECRET = '$env:CRM_CLIENT_SECRET'
+`$env:CRM_SCOPE = '$env:CRM_SCOPE'
+`$env:CRM_USERNAME = '$env:CRM_USERNAME'
+`$env:CRM_PASSWORD = '$env:CRM_PASSWORD'
 Set-Location '$backendPath'
 Write-Host 'Backend starting...' -ForegroundColor Green
 dotnet run
