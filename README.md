@@ -67,7 +67,7 @@ dotnet restore
 
 ```bash
 cd ClientApp
-npm install
+npm install 
 ```
 
 ### 3. Configure Environment Variables
