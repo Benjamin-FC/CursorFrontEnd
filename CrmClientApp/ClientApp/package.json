@@ -8,7 +8,6 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "node scripts/build-earth.cjs"
   },
   "dependencies": {
     "react": "^19.2.0",
