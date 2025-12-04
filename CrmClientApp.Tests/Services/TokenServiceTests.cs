@@ -99,6 +99,8 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         var responseContent = @"{""access_token"":""test-access-token-12345"",""token_type"":""Bearer"",""expires_in"":3600,""scope"":""read write""}";
         
@@ -130,6 +132,8 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         var responseContent = @"{""access_token"":""cached-token"",""token_type"":""Bearer"",""expires_in"":3600}";
         
@@ -170,6 +174,8 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_SCOPE", "read write");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         var responseContent = @"{""access_token"":""test-token"",""expires_in"":3600}";
         
@@ -202,51 +208,14 @@ public class TokenServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetTokenAsync_ShouldUseBasicAuth_WhenConfigured()
-    {
-        // Arrange
-        Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
-        Environment.SetEnvironmentVariable("USE_BASIC_AUTH", "true");
-        Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
-        Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
-
-        var responseContent = @"{""access_token"":""test-token-basic"",""expires_in"":3600}";
-        
-        HttpRequestMessage? capturedRequest = null;
-        _mockHttpMessageHandler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync((HttpRequestMessage request, CancellationToken token) =>
-            {
-                capturedRequest = request;
-                return new HttpResponseMessage
-                {
-                    StatusCode = HttpStatusCode.OK,
-                    Content = new StringContent(responseContent, Encoding.UTF8, "application/json")
-                };
-            });
-
-        var tokenService = new TokenService(_configuration, _mockLogger.Object, _mockHttpClientFactory.Object);
-
-        // Act
-        await tokenService.GetTokenAsync();
-
-        // Assert
-        capturedRequest.Should().NotBeNull();
-        capturedRequest!.Headers.Authorization.Should().NotBeNull();
-        capturedRequest.Headers.Authorization!.Scheme.Should().Be("Basic");
-    }
-
-    [Fact]
     public async Task GetTokenAsync_ShouldThrow_WhenTokenServerReturnsError()
     {
         // Arrange
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         _mockHttpMessageHandler
             .Protected()
@@ -273,6 +242,8 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         var invalidResponse = new { invalid_field = "value" };
         var responseContent = JsonSerializer.Serialize(invalidResponse);
@@ -303,6 +274,8 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", "https://www.tokenserver.com/oauth/token");
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", "test-client-id");
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", "test-secret");
+        Environment.SetEnvironmentVariable("CRM_USERNAME", "test-user");
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", "test-password");
 
         var tokenResponse1Content = @"{""access_token"":""first-token"",""expires_in"":1}";
         var tokenResponse2Content = @"{""access_token"":""refreshed-token"",""expires_in"":3600}";
@@ -351,8 +324,9 @@ public class TokenServiceTests : IDisposable
         Environment.SetEnvironmentVariable("CRM_TOKEN_URL", null);
         Environment.SetEnvironmentVariable("GRANT_TYPE", null);
         Environment.SetEnvironmentVariable("CRM_SCOPE", null);
-        Environment.SetEnvironmentVariable("USE_BASIC_AUTH", null);
         Environment.SetEnvironmentVariable("CRM_CLIENT_ID", null);
         Environment.SetEnvironmentVariable("CRM_CLIENT_SECRET", null);
+        Environment.SetEnvironmentVariable("CRM_USERNAME", null);
+        Environment.SetEnvironmentVariable("CRM_PASSWORD", null);
     }
 }

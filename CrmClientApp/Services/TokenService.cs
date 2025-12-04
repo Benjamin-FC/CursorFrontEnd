@@ -15,7 +15,6 @@ public class TokenService : ITokenService
     private readonly string _tokenEndpoint;
     private readonly string _grantType;
     private readonly string _scope;
-    private readonly bool _useBasicAuth;
     private readonly string _clientId;
     private readonly string _clientSecret;
     private readonly string _username;
@@ -44,7 +43,6 @@ public class TokenService : ITokenService
             ?? throw new InvalidOperationException("CRM_TOKEN_URL environment variable is required");
         _grantType = "password";
         _scope = Environment.GetEnvironmentVariable("CRM_SCOPE") ?? "";
-        _useBasicAuth = bool.TryParse(Environment.GetEnvironmentVariable("USE_BASIC_AUTH"), out var useBasicAuth) && useBasicAuth;
         _clientId = Environment.GetEnvironmentVariable("CRM_CLIENT_ID") 
             ?? throw new InvalidOperationException("CRM_CLIENT_ID environment variable is required");
         _clientSecret = Environment.GetEnvironmentVariable("CRM_CLIENT_SECRET") 
@@ -120,13 +118,6 @@ public class TokenService : ITokenService
             {
                 Content = new FormUrlEncodedContent(requestBody)
             };
-
-            // Add basic auth header if configured
-            if (_useBasicAuth)
-            {
-                var credentials = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_clientId}:{_clientSecret}"));
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-            }
 
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
