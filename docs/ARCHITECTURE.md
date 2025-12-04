@@ -183,6 +183,7 @@ sequenceDiagram
     Controller->>Controller: Validate client ID
     alt Invalid client ID
         Controller-->>React: 400 Bad Request ❌
+        deactivate Controller
         React-->>User: Display error message
     else Valid client ID
         Controller->>CrmService: GetClientDataAsync(clientId)
@@ -212,20 +213,22 @@ sequenceDiagram
         
         alt CRM Server Success
             CrmServer-->>CrmService: 200 OK + Client Data
-            CrmService-->>Controller: Client data string
-            deactivate CrmService
-            Controller-->>React: 200 OK<br/>{ "data": "..." }
-            deactivate Controller
-            React-->>User: Display client data ✅
         else CRM Server Error
             CrmServer-->>CrmService: Error response
-            CrmService-->>Controller: HttpRequestException
-            deactivate CrmService
-            Controller-->>React: 503 Service Unavailable ❌
-            deactivate Controller
-            React-->>User: Display error message
         end
         deactivate CrmServer
+        
+        alt CRM Server Success
+            CrmService-->>Controller: Client data string
+            Controller-->>React: 200 OK<br/>{ "data": "..." }
+            React-->>User: Display client data ✅
+        else CRM Server Error
+            CrmService-->>Controller: HttpRequestException
+            Controller-->>React: 503 Service Unavailable ❌
+            React-->>User: Display error message
+        end
+        deactivate CrmService
+        deactivate Controller
     end
 ```
 
