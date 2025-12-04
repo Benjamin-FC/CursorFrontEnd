@@ -13,7 +13,11 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.26.0",
-    "@frankcrum/earth-react": "git+https://github.com/Benjamin-FC/design-system.git#main"
+    "@frankcrum/earth-react": "git+https://github.com/Benjamin-FC/design-system.git#main",
+    "@frankcrum/earth": "git+https://github.com/Benjamin-FC/design-system.git#main"
+  },
+  "overrides": {
+    "@frankcrum/earth": "git+https://github.com/Benjamin-FC/design-system.git#main"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
