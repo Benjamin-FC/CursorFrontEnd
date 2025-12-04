@@ -50,6 +50,98 @@ graph TB
     class TokenServer,CrmServer external
 ```
 
+## Frontend Architecture
+
+### Routing Structure
+
+The application uses React Router v6 for client-side routing:
+
+```
+/ (root)
+├── /login (public route)
+│   └── Login component
+└── / (protected route)
+    └── App component (wrapped in ProtectedRoute)
+```
+
+**Route Protection**:
+- `/login`: Public route, accessible to all users
+- `/`: Protected route, requires authentication
+- `*` (catch-all): Redirects to `/login`
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User as 👤 User
+    participant App as ⚛️ React App
+    participant Auth as 🔐 AuthContext
+    participant Storage as 💾 localStorage
+    participant API as 🎮 Backend API
+    
+    Note over App,Storage: Application Initialization
+    App->>Storage: Clear auth state on startup
+    App->>Auth: Initialize AuthProvider
+    Auth->>Storage: Check for existing auth
+    Storage-->>Auth: Return auth state
+    Auth-->>App: Set initial state
+    
+    Note over User,API: Login Flow
+    User->>App: Navigate to /login
+    User->>App: Enter credentials
+    App->>Auth: login(username, password)
+    Auth->>Auth: Validate input
+    alt Valid credentials
+        Auth->>Storage: Store auth state
+        Auth-->>App: { success: true }
+        App->>App: Navigate to /
+    else Invalid credentials
+        Auth-->>App: { success: false, error: "..." }
+        App->>User: Display error message
+    end
+    
+    Note over User,API: Protected Route Access
+    User->>App: Navigate to /
+    App->>ProtectedRoute: Check authentication
+    ProtectedRoute->>Auth: useAuth()
+    Auth->>Storage: Check auth state
+    alt Authenticated
+        Storage-->>Auth: isAuthenticated = true
+        Auth-->>ProtectedRoute: Allow access
+        ProtectedRoute-->>App: Render App component
+    else Not authenticated
+        Storage-->>Auth: isAuthenticated = false
+        Auth-->>ProtectedRoute: Redirect needed
+        ProtectedRoute->>App: Navigate to /login
+    end
+    
+    Note over User,API: Logout Flow
+    User->>App: Click logout button
+    App->>Auth: logout()
+    Auth->>Storage: Remove auth state
+    Auth->>Auth: Clear state
+    Auth-->>App: State cleared
+    App->>App: Navigate to /login
+```
+
+### State Management
+
+**Global State (AuthContext)**:
+- Authentication status
+- Current username
+- Loading state
+
+**Local Component State**:
+- Form inputs (clientId, username, password)
+- Loading states
+- Error messages
+- Client data
+
+**Persistence**:
+- Authentication state stored in `localStorage`
+- Cleared on app initialization
+- Persists across page refreshes
+
 ## Component Overview
 
 ### Component Relationships
@@ -57,7 +149,11 @@ graph TB
 ```mermaid
 graph LR
     subgraph Frontend["🌐 Frontend"]
-        AppJSX[App.jsx<br/>⚛️ React Component]
+        MainJSX[main.jsx<br/>🚀 Entry Point]
+        AppJSX[App.jsx<br/>⚛️ Main Component]
+        LoginJSX[Login.jsx<br/>🔐 Auth Page]
+        ProtectedRoute[ProtectedRoute.jsx<br/>🛡️ Route Guard]
+        AuthContext[AuthContext.jsx<br/>🔐 Auth State]
         ViteConfig[Vite Config<br/>⚡ Build Tool]
     end
     
@@ -78,6 +174,13 @@ graph LR
         end
     end
     
+    MainJSX -->|Routes| AppJSX
+    MainJSX -->|Routes| LoginJSX
+    MainJSX -->|Wraps| AuthContext
+    AppJSX -->|Uses| AuthContext
+    AppJSX -->|Uses| ProtectedRoute
+    LoginJSX -->|Uses| AuthContext
+    ProtectedRoute -->|Uses| AuthContext
     AppJSX -->|HTTP Request| Controller
     ViteConfig -->|Proxy /api| Controller
     Program -->|DI Registration| Controller
@@ -97,7 +200,7 @@ graph LR
     classDef interface fill:#4ec9b0,stroke:#fff,stroke-width:2px,color:#000
     classDef config fill:#ffa500,stroke:#fff,stroke-width:2px,color:#000
     
-    class AppJSX,ViteConfig frontend
+    class MainJSX,AppJSX,LoginJSX,ProtectedRoute,AuthContext,ViteConfig frontend
     class Program,Controller backend
     class CrmSvc,TokenSvc service
     class ICrmSvc,ITokenSvc interface
@@ -147,20 +250,69 @@ graph LR
 
 ### Frontend Components
 
-#### 1. **App.jsx**
-- **Purpose**: Main React component with user interface
+#### 1. **main.jsx**
+- **Purpose**: Application entry point and routing configuration
 - **Features**:
-  - Form for entering client ID
-  - HTTP request to backend API
-  - Display of client data or error messages
-  - Loading states during API calls
+  - React Router setup with `BrowserRouter`
+  - Route definitions for `/login` and `/` (protected)
+  - Catch-all route redirects to login
+  - `AuthProvider` wrapper for global authentication state
+  - Clears authentication state on app initialization
 
-#### 2. **Vite Configuration** (`vite.config.js`)
+#### 2. **App.jsx**
+- **Purpose**: Main application component with client data search interface
+- **Features**:
+  - Search form with client ID input
+  - HTTP request to backend API (`/api/Crm/GetClientData`)
+  - Card-based data display with gradient accents
+  - Loading states with spinner icon
+  - Error handling with inline messages
+  - Logout functionality
+  - Results section with clear button
+  - Animated gradient background
+
+#### 3. **Login.jsx**
+- **Purpose**: User authentication page
+- **Features**:
+  - Username and password input fields
+  - Icon-enhanced form inputs (envelope, lock)
+  - Form validation
+  - Error message display
+  - Integration with `AuthContext` for login
+  - Redirects to main app on success
+
+#### 4. **ProtectedRoute.jsx**
+- **Purpose**: Route guard component for authenticated pages
+- **Features**:
+  - Checks authentication state via `useAuth` hook
+  - Shows loading state during auth check
+  - Redirects unauthenticated users to `/login`
+  - Preserves attempted location for post-login redirect
+
+#### 5. **AuthContext.jsx** (`contexts/AuthContext.jsx`)
+- **Purpose**: Global authentication state management
+- **Features**:
+  - React Context API implementation
+  - `AuthProvider` component for state provision
+  - `useAuth` hook for consuming auth state
+  - localStorage persistence for authentication
+  - Login and logout functions
+  - Loading state management
+
+#### 6. **Vite Configuration** (`vite.config.js`)
 - **Purpose**: Development server and build configuration
 - **Features**:
-  - Proxy configuration for API requests
+  - Proxy configuration for API requests (`/api` → `http://localhost:5000`)
   - Development server on port 5173
   - Production build output to `wwwroot`
+  - React plugin configuration
+  - Path alias for `@frankcrum/earth` design system
+
+#### 7. **Styling Files**
+- **index.css**: Global styles with Tailwind CSS and Earth design system imports
+- **App.css**: Main application page styles with card layouts and animations
+- **Login.css**: Login page styles with form and card styling
+- **PostCSS Configuration**: Tailwind CSS v4 processing
 
 ## Data Flow
 

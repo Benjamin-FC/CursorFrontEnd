@@ -166,10 +166,26 @@ Fetches client data from the external CRM server.
 
 ## Frontend
 
-The React frontend provides a simple form to:
-1. Enter a client ID
-2. Submit to fetch client data from the CRM server
-3. Display the returned data or error messages
+The React frontend is a single-page application (SPA) with the following features:
+
+### Authentication
+- **Login Page**: User authentication with username and password
+- **Protected Routes**: Main application requires authentication
+- **Session Management**: Authentication state persisted in localStorage
+- **Auto-logout**: Application clears auth state on initialization
+
+### Main Application
+1. **Search Interface**: Form to enter a client ID with search icon
+2. **Data Display**: Card-based layout with gradient accents
+3. **Error Handling**: Inline error messages with icons
+4. **Loading States**: Visual feedback during API calls
+5. **Logout**: Header with user welcome and logout button
+
+### Design System
+- **Earth Design System**: Uses `@frankcrum/earth` for consistent styling
+- **Tailwind CSS**: v4.0.0 for utility classes
+- **Responsive Design**: Mobile-friendly layout
+- **Animations**: Smooth transitions and hover effects
 
 ## Configuration
 
@@ -251,6 +267,7 @@ For more detailed documentation, see the [docs](docs/) folder:
 
 - **[API Documentation](docs/API.md)** - Complete API reference with examples
 - **[Architecture Documentation](docs/ARCHITECTURE.md)** - System architecture and design details
+- **[Design Documentation](docs/DESIGN.md)** - UI/UX design system and component guidelines
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Deployment instructions for various platforms
 
 ## Notes
