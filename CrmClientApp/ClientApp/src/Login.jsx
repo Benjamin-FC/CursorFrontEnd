@@ -21,7 +21,7 @@ function Login() {
         // Store auth state (in a real app, use proper auth tokens)
         localStorage.setItem('isAuthenticated', 'true')
         localStorage.setItem('username', username)
-        navigate('/')
+        navigate('/', { replace: true })
       } else {
         throw new Error('Please enter both username and password')
       }
